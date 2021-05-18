@@ -1,0 +1,14 @@
+# Disk images
+vigil.hdd
+
+# Object files
+*.o
+
+# Executable files
+*.elf
+*.bin
+*.EFI
+
+# Other
+/3rdparty/
+/kernel/fw/acpi/lai/
