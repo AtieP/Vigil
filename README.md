@@ -1,6 +1,8 @@
 # Vigil
 Vigil is a x86_64 operating system.
 
+![Vigil](vigil.png?raw=true "Vigil")
+
 # Features
 - Booted by Limine using the stivale2 protocol
 - Physical memory manager
