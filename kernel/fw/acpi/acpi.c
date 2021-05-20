@@ -53,7 +53,7 @@ void *acpi_get_table(const char *signature, size_t index) {
         }
         return (void *) (uintptr_t) (fadt->dsdt + MM_HIGHER_BASE);
     }
-    for (size_t entry = 0; entry < entries; entry++) {
+    for (size_t entry, counter = 0; entry < entries; entry++) {
         struct acpi_sdt *table_header;
         if (use_xsdt) {
             table_header = (struct acpi_sdt *) (xsdt->entries[entry] + MM_HIGHER_BASE);
@@ -61,8 +61,10 @@ void *acpi_get_table(const char *signature, size_t index) {
             table_header = (struct acpi_sdt *) ((uintptr_t) rsdt->entries[entry] + MM_HIGHER_BASE);
         }
         if (!strncmp(table_header->signature, signature, 4)) {
-            if (entry == index || !index) {
+            if (counter == index) {
                 return (void *) table_header;
+            } else {
+                counter++;
             }
         }
     }

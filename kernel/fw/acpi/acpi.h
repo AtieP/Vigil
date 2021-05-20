@@ -32,6 +32,14 @@ struct acpi_sdt {
     uint32_t creator_revision;
 } __attribute__((__packed__));
 
+struct acpi_gas {
+    uint8_t address_space;
+    uint8_t register_bit_width;
+    uint8_t register_bit_offset;
+    uint8_t reserved;
+    uint64_t address;
+};
+
 struct acpi_rsdt {
     struct acpi_sdt header;
     uint32_t entries[];
@@ -103,7 +111,18 @@ struct acpi_fadt {
     uint8_t fadt_minor_version;
     uint64_t x_firmware_ctrl;
     uint64_t x_dsdt;
-    // there's a bit more
+
+    struct acpi_gas x_pm1a_evt_blk;
+    struct acpi_gas x_pm1b_evt_blk;
+    struct acpi_gas x_pm1a_cnt_blk;
+    struct acpi_gas x_pm1b_cnt_blk;
+    struct acpi_gas x_pm2_cnt_blk;
+    struct acpi_gas x_pm_tmr_blk;
+    struct acpi_gas x_gpe0_blk;
+    struct acpi_gas x_gpe1_blk;
+    struct acpi_gas sleep_control_reg;
+    struct acpi_gas sleep_status_reg;
+    char hypervisor_id[8];
 } __attribute__((__packed__));
 
 struct acpi_madt {
