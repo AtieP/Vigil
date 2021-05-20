@@ -3,7 +3,7 @@
 #include <boot/stivale2.h>
 #include <mm/mm.h>
 
-static uint8_t stack[MM_PAGE_SIZE * 16];
+static uint8_t stack[MM_PAGE_SIZE * 32];
 
 static struct stivale2_header_tag_framebuffer fb = {
     .tag = {

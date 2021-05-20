@@ -50,3 +50,4 @@ $(KERNEL): $(OFILES)
 
 clean:
 	rm -f $(KERNEL)
+

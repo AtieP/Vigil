@@ -139,10 +139,10 @@ void kheap_free(void *base) {
     struct slab *slab = slabs;
     while (slab) {
         // check if it belongs to this slab
-        if (!(base < slab->base && base > slab->base + (slab->object_count * slab->object_size))) {
+        if (base >= slab->base && base < slab->base + (slab->object_count * slab->object_size)) {
             size_t index = (base - slab->base) / slab->object_size;
-            slabs->used_objects--;
-            BIT_CLEAR(index, slabs->bitmap);
+            slab->used_objects--;
+            BIT_CLEAR(index, slab->bitmap);
             return;
         }
         slab = slab->next;
