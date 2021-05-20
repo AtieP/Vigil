@@ -38,7 +38,7 @@ struct acpi_gas {
     uint8_t register_bit_offset;
     uint8_t reserved;
     uint64_t address;
-};
+} __attribute__((__packed__));
 
 struct acpi_rsdt {
     struct acpi_sdt header;
