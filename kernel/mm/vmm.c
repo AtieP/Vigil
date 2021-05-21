@@ -3,6 +3,7 @@
 #include <cpu/msr.h>
 #include <misc/kcon.h>
 #include <mm/mm.h>
+#include <mp/mutex.h>
 #include <tools/builtins.h>
 
 #define MODULE_NAME "vmm"
@@ -24,6 +25,7 @@ struct vmm_pagemap vmm_new_pagemap() {
 }
 
 void vmm_map_page(struct vmm_pagemap *pagemap, uintptr_t physical_address, uintptr_t virtual_address, uint64_t flags) {
+    mutex_lock(&kernel_pagemap.mutex);
     size_t pml4_index = (size_t) (virtual_address & ((size_t) 0x1ff << 39)) >> 39;
     size_t pml3_index = (size_t) (virtual_address & ((size_t) 0x1ff << 30)) >> 30;
     size_t pml2_index = (size_t) (virtual_address & ((size_t) 0x1ff << 21)) >> 21;
@@ -34,9 +36,11 @@ void vmm_map_page(struct vmm_pagemap *pagemap, uintptr_t physical_address, uintp
     uint64_t *pml1 = get_next_level(pml2, pml2_index);
 
     pml1[pml1_index] = physical_address | flags;
+    mutex_unlock(&kernel_pagemap.mutex);
 }
 
 void vmm_unmap_page(struct vmm_pagemap *pagemap, uintptr_t virtual_address) {
+    mutex_lock(&kernel_pagemap.mutex);
     size_t pml4_index = (size_t) (virtual_address & ((size_t) 0x1ff << 39)) >> 39;
     size_t pml3_index = (size_t) (virtual_address & ((size_t) 0x1ff << 30)) >> 30;
     size_t pml2_index = (size_t) (virtual_address & ((size_t) 0x1ff << 21)) >> 21;
@@ -47,6 +51,7 @@ void vmm_unmap_page(struct vmm_pagemap *pagemap, uintptr_t virtual_address) {
     uint64_t *pml1 = get_next_level(pml2, pml2_index);
 
     pml1[pml1_index] = 0;
+    mutex_unlock(&kernel_pagemap.mutex);
 }
 
 void vmm_init(struct stivale2_struct_tag_memmap *memory_map) {

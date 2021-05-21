@@ -2,10 +2,12 @@
 #define __TOOLS_VECTOR_H__
 
 #include <stddef.h>
+#include <mp/mutex.h>
 
 struct vector {
     void *data;
     size_t size;
+    struct mutex mutex;
 };
 
 void vector_create(struct vector *vector);

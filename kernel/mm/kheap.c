@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <misc/kcon.h>
 #include <mm/mm.h>
+#include <mp/mutex.h>
 #include <tools/assert.h>
 #include <tools/builtins.h>
 #include <tools/panic.h>
@@ -26,6 +27,7 @@ struct slab {
     size_t object_count;
     size_t used_objects;
     struct slab *next;
+    struct mutex mutex;
 };
 
 static struct slab *slabs = NULL;
@@ -90,16 +92,19 @@ allocate:
         create_slab(size);
     }
     struct slab *slab = slabs;
+    mutex_lock(&slab->mutex);
     while (slab) {
         if (slab->object_size == size) {
             for (size_t i = 0; i < slab->object_count; i++) {
                 if (!BIT_TEST(i, slab->bitmap)) {
                     BIT_SET(i, slab->bitmap);
                     slab->used_objects++;
+                    mutex_unlock(&slab->mutex);
                     return slab->base + (i * slab->object_size);
                 }
             }
         }
+        mutex_unlock(&slab->mutex);
         slab = slab->next;
     }
     create_slab(size);
@@ -138,13 +143,16 @@ void *kheap_realloc(void *old, size_t newsize, size_t oldsize) {
 void kheap_free(void *base) {
     struct slab *slab = slabs;
     while (slab) {
+        mutex_lock(&slab->mutex);
         // check if it belongs to this slab
         if (base >= slab->base && base < slab->base + (slab->object_count * slab->object_size)) {
             size_t index = (base - slab->base) / slab->object_size;
             slab->used_objects--;
             BIT_CLEAR(index, slab->bitmap);
+            mutex_unlock(&slab->mutex);
             return;
         }
+        mutex_unlock(&slab->mutex);
         slab = slab->next;
     }
     panic(MODULE_NAME, "Could not free memory address %p", base);

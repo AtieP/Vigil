@@ -3,9 +3,12 @@
 #include <boot/stivale2.h>
 #include <misc/kcon.h>
 #include <mm/mm.h>
+#include <mp/mutex.h>
 #include <tools/assert.h>
 #include <tools/builtins.h>
 #include <tools/panic.h>
+
+static struct mutex pmm_mutex;
 
 extern char _kernel_start[];
 extern char _kernel_end[];
@@ -108,6 +111,7 @@ void pmm_print_memmap(struct stivale2_struct_tag_memmap *memory_map) {
 }
 
 void *pmm_alloc(size_t pages) {
+    mutex_lock(&pmm_mutex);
     assert(pages != 0, MODULE_NAME, "Cannot allocate 0 pages");
     size_t pages_found = 0;
     for (size_t i = 0; i < highest_page / MM_PAGE_SIZE; i++) {
@@ -123,6 +127,7 @@ void *pmm_alloc(size_t pages) {
                 BIT_SET(i - j);
             }
             i -= j - 1;
+            mutex_unlock(&pmm_mutex);
             return (void *) (MM_PAGE_SIZE * i);
         }
     }
@@ -146,12 +151,15 @@ void *pmm_realloc(void *old, size_t newpages, size_t oldpages) {
 
 void pmm_free(void *ptr, size_t pages) {
     assert(pages != 0, MODULE_NAME, "Cannot free 0 pages");
+    mutex_lock(&pmm_mutex);
     for (size_t i = 0; i < pages; i++, ptr += MM_PAGE_SIZE) {
         BIT_CLEAR((uintptr_t) ptr / MM_PAGE_SIZE);
     }
+    mutex_unlock(&pmm_mutex);
 }
 
 struct pmm_memory pmm_get_memory() {
+    mutex_lock(&pmm_mutex); // to get current stats
     struct pmm_memory memory = { 0 };
     for (size_t i = 0; i < highest_page / MM_PAGE_SIZE; i++) {
         memory.total += MM_PAGE_SIZE;
@@ -159,5 +167,6 @@ struct pmm_memory pmm_get_memory() {
             memory.usable += MM_PAGE_SIZE;
         }
     }
+    mutex_unlock(&pmm_mutex);
     return memory;
 }

@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <misc/kcon.h>
 #include <mm/mm.h>
+#include <mp/mutex.h>
 #include <tools/builtins.h>
 
 uint8_t font[] = {
@@ -276,6 +277,8 @@ static uint16_t font_height;
 static int x_position;
 static int y_position;
 
+static struct mutex kcon_mutex;
+
 // default colors
 static uint32_t foreground_color = 0xffffff;
 static uint32_t background_color = 0x000000;
@@ -317,6 +320,7 @@ static void kcon_putpx(int x, int y, uint32_t color) {
 }
 
 void kcon_putc(int ch) {
+	mutex_lock(&kcon_mutex);
     if (ch == '\n') {
         goto newline;
     }
@@ -344,6 +348,7 @@ newline:
 	if (y_position >= fb_height / font_height - 1) {
 		kcon_scroll();
 	}
+	mutex_unlock(&kcon_mutex);
 }
 
 void kcon_scroll() {

@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <boot/stivale2.h>
+#include <mp/mutex.h>
 
 #define MM_PAGE_SIZE (4096)
 #define MM_KERNEL_BASE (0xffffffff80000000)
@@ -31,7 +32,7 @@ struct pmm_memory pmm_get_memory();
 
 struct vmm_pagemap {
     uint64_t *pml4;
-    // todo: put here a lock when implemented
+    struct mutex mutex;
 };
 
 struct vmm_pagemap vmm_new_pagemap();
