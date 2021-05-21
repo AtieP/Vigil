@@ -4,6 +4,7 @@
 #include <cpu/gdt.h>
 #include <cpu/idt.h>
 #include <cpu/pio.h>
+#include <fs/vfs.h>
 #include <fw/acpi/acpi.h>
 #include <fw/pcie/pcie.h>
 #include <misc/kcon.h>
@@ -33,6 +34,7 @@ void kmain(struct stivale2_struct *bootloader_info) {
 	lapic_enable();
 	kcon_log(KCON_LOG_INFO, "kernel", "Total memory: %d MB, Usable memory: %d MB", pmm_get_memory().total / 1024 / 1024, pmm_get_memory().usable / 1024 / 1024);
 	lai_init();
+	vfs_init();
 	kheap_walkthrough();
 	asm volatile("sti");
 	for (;;) {}
