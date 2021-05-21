@@ -5,8 +5,8 @@
 #include <stddef.h>
 
 struct mutex {
-    bool locked;
-    size_t refcount;
+    volatile bool locked;
+    volatile size_t refcount;
 };
 
 void mutex_lock(struct mutex *mutex);

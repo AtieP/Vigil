@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <mp/atomics.h>
 #include <mp/mutex.h>
 
