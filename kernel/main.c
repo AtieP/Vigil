@@ -35,5 +35,6 @@ void kmain(struct stivale2_struct *bootloader_info) {
 	lai_init();
 	kheap_walkthrough();
 	asm volatile("sti");
+	for (;;) {}
 	panic("kernel", "End of kernel");
 }
