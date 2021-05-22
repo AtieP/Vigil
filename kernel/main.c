@@ -52,28 +52,10 @@ void kmain(struct stivale2_struct *bootloader_info) {
 	kcon_log(KCON_LOG_INFO, "kernel", "Total memory: %d MB, Usable memory: %d MB", pmm_get_memory().total / 1024 / 1024, pmm_get_memory().usable / 1024 / 1024);
 	lai_init();
 	vfs_init();
-	struct vfs_node *root = vfs_get_node("/");
-	if (!root) {
-		panic("kernel", "Root node not found (wtf)");
-	}
-	struct vfs_node *node = vfs_create_node(root, "piss");
-	if (!node) {
-		panic("kernel", "just fucking died because of cringe");
-	}
-	node = vfs_get_node("/piss");
-	if (!node) {
-		panic("kernel", "how come there is no piss in the balls??");
-	}
-	node = vfs_create_node(node, "penis");
-	if (!node) {
-		panic("kernel", "No pingus?");
-	}
-	node = vfs_get_node("/piss/penis");
-	if (!node) {
-		panic("kernel", "lmao");
-	}
 	kheap_walkthrough();
 	asm volatile("sti");
-	for (;;) {}
+	for (;;) {
+		asm volatile("hlt");
+	}
 	panic("kernel", "End of kernel");
 }
