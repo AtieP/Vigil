@@ -40,7 +40,6 @@ static uint8_t *bitmap;
 static uintptr_t highest_page;
 
 void pmm_init(struct stivale2_struct_tag_memmap *memory_map) {
-    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Initializing");
     for (uint64_t i = 0; i < memory_map->entries; i++) {
         if (
             memory_map->memmap[i].type != STIVALE2_MMAP_USABLE
@@ -84,7 +83,7 @@ bitmap_allocated:
             BIT_CLEAR(addr / MM_PAGE_SIZE);
         }
     }
-    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Finished initializing");
+    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Bitmap set up successfully, ready for allocations");
 }
 
 static const char *get_memmap_entry_type(int type) {

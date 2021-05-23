@@ -22,7 +22,8 @@
 #include <stdint.h>
 
 // Core functions
-void pcie_init();
+void pcie_get_mcfg();
+void pcie_enumerate();
 
 uint8_t pcie_read_byte(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t function, uint16_t offset);
 uint16_t pcie_read_word(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t function, uint16_t offset);

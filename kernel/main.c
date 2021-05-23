@@ -47,12 +47,14 @@ void kmain(struct stivale2_struct *bootloader_info) {
 	idt_init();
 	exceptions_init();
 	acpi_init(rsdp);
-	pcie_init();
+	pcie_get_mcfg();
 	lapic_enable();
 	kcon_log(KCON_LOG_INFO, "kernel", "Total memory: %d MB, Usable memory: %d MB", pmm_get_memory().total / 1024 / 1024, pmm_get_memory().usable / 1024 / 1024);
 	lai_init();
+	pcie_enumerate();
 	vfs_init();
 	kheap_walkthrough();
+	kcon_log(KCON_LOG_INFO, "kernel", "Everything initialized successfully, waiting for IRQs");
 	asm volatile("sti");
 	for (;;) {
 		asm volatile("hlt");

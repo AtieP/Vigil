@@ -75,13 +75,12 @@ static void idt_populate_pre_handlers() {
 }
 
 void idt_init() {
-    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Initializing");
     idt_populate_pre_handlers();
     struct idt_register idt_reg;
     idt_reg.limit = (uint16_t) sizeof(idt) - 1;
     idt_reg.base = (uint64_t) &idt;
     idt_reload(idt_reg);
-    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Finished initializing");
+    kcon_log(KCON_LOG_INFO, MODULE_NAME, "IDT installed");
 }
 
 void idt_reload(struct idt_register idt_reg) {

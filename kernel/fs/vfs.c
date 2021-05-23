@@ -37,10 +37,9 @@ static size_t strlen_slash(const char *string) {
 }
 
 void vfs_init() {
-    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Initializing");
     root_node = kheap_calloc(sizeof(struct vfs_node));
     root_node->name[0] = '/';
-    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Finished initializing");
+    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Root node created successfully");
 }
 
 struct vfs_node *vfs_get_node(const char *path) {

@@ -74,7 +74,6 @@ void vmm_unmap_page(struct vmm_pagemap *pagemap, uintptr_t virtual_address) {
 void vmm_init(struct stivale2_struct_tag_memmap *memory_map) {
     (void) memory_map;
 
-    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Mapping kernel");
     kernel_pagemap.pml4 = (uint64_t *) pmm_calloc(1);
 
     for (uintptr_t i = 0; i < 0x80000000; i += MM_PAGE_SIZE) {
@@ -86,5 +85,5 @@ void vmm_init(struct stivale2_struct_tag_memmap *memory_map) {
     }
 
     vmm_switch_pagemap((uintptr_t) kernel_pagemap.pml4);
-    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Finished mapping kernel");
+    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Higher half and kernel mapped successfully");
 }

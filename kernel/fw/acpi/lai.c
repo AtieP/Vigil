@@ -30,12 +30,11 @@
 #define MODULE_NAME "lai"
 
 void lai_init() {
-    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Initializing");
     acpi_sci_install();
     lai_set_acpi_revision((int) rsdp_revision);
     lai_create_namespace();
     lai_enable_acpi(1); // 1: IO/APIC, otherwise PIC
-    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Finished initializing");
+    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Namespace has been created and ACPI mode has been enabled, ready to receive SCIs");
 }
 
 void *laihost_malloc(size_t size) {

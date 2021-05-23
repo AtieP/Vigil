@@ -59,5 +59,6 @@ void madt_init() {
         }
         i += entry_header->length;
     }
+    kcon_log(KCON_LOG_INFO, MODULE_NAME, "MADT parsed successfully");
 }
 

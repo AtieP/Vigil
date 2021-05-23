@@ -80,9 +80,8 @@ static void exception_handler(struct interrupt_frame *int_frame, uint8_t vector,
 }
 
 void exceptions_init() {
-    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Initializing");
     for (size_t i = 0; i < 31; i++) {
         idt_register_handler((uint8_t) i, (idt_handler_t) exception_handler, 0, 0b10001111);
     }
-    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Finished initializing");
+    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Exception handlers registered successfully");
 }
