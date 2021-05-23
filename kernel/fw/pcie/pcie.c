@@ -52,6 +52,37 @@ static struct acpi_mcfg_entry *pcie_get_segment_bus_entry(uint16_t segment, uint
     panic(MODULE_NAME, "Could not get address for segment %d bus %d", segment, bus);
 }
 
+static void parse_function(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t function) {
+    // function exists?
+    if (pcie_read_word(segment, bus, slot, function, 0x00) == 0xffff) {
+        return;
+    }
+    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Found device with segment %d bus %d slot %d function %d", segment, bus, slot, function);
+}
+
+static void enumerate_slot(uint16_t segment, uint8_t bus, uint8_t slot) {
+    // slot exists?
+    if (pcie_read_word(segment, bus, slot, 0, 0x00) == 0xffff) {
+        return;
+    }
+    // is it a multi function slot?
+    size_t functions;
+    if (pcie_read_byte(segment, bus, slot, 0, 0x0e) & (1 << 7)) {
+        functions = 8;
+    } else {
+        functions = 1;
+    }
+    for (size_t function = 0; function < functions; function++) {
+        parse_function(segment, bus, slot, function);
+    }
+}
+
+static void enumerate_bus(uint16_t segment, uint8_t bus) {
+    for (size_t slot = 0; slot < 32; slot++) {
+        enumerate_slot(segment, bus, slot);
+    }
+}
+
 void pcie_get_mcfg() {
     pcie_mcfg = acpi_get_table("MCFG", 0);
     assert(pcie_mcfg != NULL, MODULE_NAME, "MCFG not found");
@@ -108,7 +139,8 @@ void pcie_enumerate() {
                 panic(MODULE_NAME, "Could not get integer from AML object");
             }
         }
-        kcon_log(KCON_LOG_INFO, MODULE_NAME, "Found segment %d bus %d", segment, bus);
+        kcon_log(KCON_LOG_INFO, MODULE_NAME, "Found root with segment %d bus %d", segment, bus);
+        enumerate_bus(segment, bus);
     }
     kcon_log(KCON_LOG_INFO, MODULE_NAME, "Enumerated successfully");
 }
