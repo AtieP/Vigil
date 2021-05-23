@@ -23,10 +23,12 @@
 #include <tools/assert.h>
 #include <tools/panic.h>
 #include <tools/vector.h>
+#include <lai/core.h>
 
 #define MODULE_NAME "pcie"
 
 static struct acpi_mcfg *pcie_mcfg;
+static struct vector pcie_devices;
 
 void pcie_get_mcfg() {
     pcie_mcfg = acpi_get_table("MCFG", 0);
@@ -36,7 +38,57 @@ void pcie_get_mcfg() {
 }
 
 void pcie_enumerate() {
-    kcon_log(KCON_LOG_INFO, MODULE_NAME, "TODO: Enumerate using AML");
+    // took reference from luna, a baremetal hypervisor made by thom_tl
+    // github repo: https://github.com/thomtl/luna
+    LAI_CLEANUP_STATE lai_state_t state;
+    lai_init_state(&state);
+
+    LAI_CLEANUP_VAR lai_variable_t pci_pnp;
+    LAI_CLEANUP_VAR lai_variable_t pcie_pnp;
+    lai_eisaid(&pci_pnp, ACPI_PCI_ROOT_BUS_PNP_ID);
+    lai_eisaid(&pcie_pnp, ACPI_PCIE_ROOT_BUS_PNP_ID);
+
+    lai_nsnode_t *sb = lai_resolve_path(NULL, "_SB_");
+    assert(sb != NULL, MODULE_NAME, "Could not get _SB_");
+
+    struct lai_ns_child_iterator iterator = LAI_NS_CHILD_ITERATOR_INITIALIZER(sb);
+    lai_nsnode_t *node;
+
+    while ((node = lai_ns_child_iterate(&iterator))) {
+        if (lai_check_device_pnp_id(node, &pci_pnp, &state) && lai_check_device_pnp_id(node, &pcie_pnp, &state)) {
+            continue;
+        }
+        uint64_t segment;
+        uint64_t bus;
+        lai_nsnode_t *handle;
+        LAI_CLEANUP_VAR lai_variable_t variable;
+        // get segment
+        handle = lai_resolve_path(node, "_SEG");
+        if (!handle) {
+            segment = 0;
+        } else {
+            if (lai_eval(&variable, node, &state) != LAI_ERROR_NONE) {
+                panic(MODULE_NAME, "Could not evaluate AML method");
+            }
+            if (lai_obj_get_integer(&variable, (uint64_t *) segment) != LAI_ERROR_NONE) {
+                panic(MODULE_NAME, "Could not get integer from AML object");
+            }
+        }
+        // get bus
+        handle = lai_resolve_path(node, "_BBN");
+        if (!handle) {
+            bus = 0;
+        } else {
+            if (lai_eval(&variable, node, &state) != LAI_ERROR_NONE) {
+                panic(MODULE_NAME, "Could not evaluate AML method");
+            }
+            if (lai_obj_get_integer(&variable, (uint64_t *) bus) != LAI_ERROR_NONE) {
+                panic(MODULE_NAME, "Could not get integer from AML object");
+            }
+        }
+        kcon_log(KCON_LOG_INFO, MODULE_NAME, "Found segment %d bus %d", segment, bus);
+    }
+    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Enumerated successfully");
 }
 
 static uintptr_t pcie_get_device_address(struct acpi_mcfg_entry *mcfg_entry, uint8_t bus, uint8_t slot, uint8_t function) {
