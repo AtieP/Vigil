@@ -30,6 +30,28 @@
 static struct acpi_mcfg *pcie_mcfg;
 static struct vector pcie_devices;
 
+static uintptr_t pcie_get_device_address(struct acpi_mcfg_entry *mcfg_entry, uint8_t bus, uint8_t slot, uint8_t function) {
+    return (
+        mcfg_entry->base
+        + (((bus - mcfg_entry->start_pci_bus) << 20) | (slot << 15) | (function << 12))
+        + MM_HIGHER_BASE
+    );
+}
+
+static struct acpi_mcfg_entry *pcie_get_segment_bus_entry(uint16_t segment, uint8_t bus) {
+    size_t mcfg_entries = (pcie_mcfg->header.length - sizeof(struct acpi_mcfg)) / sizeof(struct acpi_mcfg_entry);
+    for (size_t i = 0; i < mcfg_entries; i++) {
+        if (
+            pcie_mcfg->entries[i].segment_number == segment
+            && pcie_mcfg->entries[i].start_pci_bus <= bus
+            && pcie_mcfg->entries[i].end_pci_bus >= bus
+        ) {
+            return &pcie_mcfg->entries[i];
+        }
+    }
+    panic(MODULE_NAME, "Could not get address for segment %d bus %d", segment, bus);
+}
+
 void pcie_get_mcfg() {
     pcie_mcfg = acpi_get_table("MCFG", 0);
     assert(pcie_mcfg != NULL, MODULE_NAME, "MCFG not found");
@@ -89,28 +111,6 @@ void pcie_enumerate() {
         kcon_log(KCON_LOG_INFO, MODULE_NAME, "Found segment %d bus %d", segment, bus);
     }
     kcon_log(KCON_LOG_INFO, MODULE_NAME, "Enumerated successfully");
-}
-
-static uintptr_t pcie_get_device_address(struct acpi_mcfg_entry *mcfg_entry, uint8_t bus, uint8_t slot, uint8_t function) {
-    return (
-        mcfg_entry->base
-        + (((bus - mcfg_entry->start_pci_bus) << 20) | (slot << 15) | (function << 12))
-        + MM_HIGHER_BASE
-    );
-}
-
-static struct acpi_mcfg_entry *pcie_get_segment_bus_entry(uint16_t segment, uint8_t bus) {
-    size_t mcfg_entries = (pcie_mcfg->header.length - sizeof(struct acpi_mcfg)) / sizeof(struct acpi_mcfg_entry);
-    for (size_t i = 0; i < mcfg_entries; i++) {
-        if (
-            pcie_mcfg->entries[i].segment_number == segment
-            && pcie_mcfg->entries[i].start_pci_bus <= bus
-            && pcie_mcfg->entries[i].end_pci_bus >= bus
-        ) {
-            return &pcie_mcfg->entries[i];
-        }
-    }
-    panic(MODULE_NAME, "Could not get address for segment %d bus %d", segment, bus);
 }
 
 uint8_t pcie_read_byte(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t function, uint16_t offset) {
