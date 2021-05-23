@@ -70,7 +70,7 @@ void pcie_enumerate() {
             if (lai_eval(&variable, node, &state) != LAI_ERROR_NONE) {
                 panic(MODULE_NAME, "Could not evaluate AML method");
             }
-            if (lai_obj_get_integer(&variable, (uint64_t *) segment) != LAI_ERROR_NONE) {
+            if (lai_obj_get_integer(&variable, (uint64_t *) &segment) != LAI_ERROR_NONE) {
                 panic(MODULE_NAME, "Could not get integer from AML object");
             }
         }
@@ -82,7 +82,7 @@ void pcie_enumerate() {
             if (lai_eval(&variable, node, &state) != LAI_ERROR_NONE) {
                 panic(MODULE_NAME, "Could not evaluate AML method");
             }
-            if (lai_obj_get_integer(&variable, (uint64_t *) bus) != LAI_ERROR_NONE) {
+            if (lai_obj_get_integer(&variable, (uint64_t *) &bus) != LAI_ERROR_NONE) {
                 panic(MODULE_NAME, "Could not get integer from AML object");
             }
         }
