@@ -54,20 +54,26 @@ static struct acpi_mcfg_entry *pcie_get_segment_bus_entry(uint16_t segment, uint
 
 static void parse_function(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t function) {
     // function exists?
-    if (pcie_read_word(segment, bus, slot, function, 0x00) == 0xffff) {
+    if (pcie_read_word(segment, bus, slot, function, PCIE_CFG_VENDOR_ID) == 0xffff) {
         return;
     }
     kcon_log(KCON_LOG_INFO, MODULE_NAME, "Found device with segment %d bus %d slot %d function %d", segment, bus, slot, function);
+    struct pcie_device device;
+    device.segment = segment;
+    device.bus = bus;
+    device.slot = slot;
+    device.function = function;
+    vector_push(&pcie_devices, &device, sizeof(struct pcie_device));
 }
 
 static void enumerate_slot(uint16_t segment, uint8_t bus, uint8_t slot) {
     // slot exists?
-    if (pcie_read_word(segment, bus, slot, 0, 0x00) == 0xffff) {
+    if (pcie_read_word(segment, bus, slot, 0, PCIE_CFG_HEADER_TYPE) == 0xffff) {
         return;
     }
     // is it a multi function slot?
     size_t functions;
-    if (pcie_read_byte(segment, bus, slot, 0, 0x0e) & (1 << 7)) {
+    if (pcie_read_byte(segment, bus, slot, 0, PCIE_CFG_HEADER_TYPE) & (1 << 7)) {
         functions = 8;
     } else {
         functions = 1;
@@ -215,4 +221,20 @@ void pcie_write_dword(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t funct
             + offset
         )
     ) = data;
+}
+
+struct pcie_device *pcie_get_device(uint8_t class, uint8_t subclass, uint8_t programming_interface) {
+    size_t entries = pcie_devices.size / sizeof(struct pcie_device);
+    struct pcie_device *device = pcie_devices.data;
+    for (size_t i = 0; i < entries; i++) {
+        if (
+            pcie_read_byte(device->segment, device->bus, device->slot, device->function, PCIE_CFG_CLASS) == class
+            && pcie_read_byte(device->segment, device->bus, device->slot, device->function, PCIE_CFG_SUBCLASS) == subclass
+            && pcie_read_byte(device->segment, device->bus, device->slot, device->function, PCIE_CFG_PROGRAMMING_INTERFACE) == programming_interface
+        ) {
+            return device;
+        }
+        device++;
+    }
+    return NULL;
 }

@@ -21,6 +21,25 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define PCIE_CFG_VENDOR_ID 0x00
+#define PCIE_CFG_DEVICE_ID 0x02
+#define PCIE_CFG_COMMAND 0x04
+#define PCIE_CFG_STATUS 0x06
+#define PCIE_CFG_REVISION_ID 0x08
+#define PCIE_CFG_PROGRAMMING_INTERFACE 0x09
+#define PCIE_CFG_SUBCLASS 0x0a
+#define PCIE_CFG_CLASS 0x0b
+#define PCIE_CFG_CACHE_LINE_SIZE 0x0c
+#define PCIE_CFG_LATENCY_TIMER 0x0d
+#define PCIE_CFG_HEADER_TYPE 0x0e
+#define PCIE_CFG_BIST 0x0f
+#define PCIE_CFG_BAR0 0x10
+#define PCIE_CFG_BAR1 0x14
+#define PCIE_CFG_BAR2 0x18
+#define PCIE_CFG_BAR3 0x1c
+#define PCIE_CFG_BAR4 0x20
+#define PCIE_CFG_BAR5 0x24
+
 // Core functions
 void pcie_get_mcfg();
 void pcie_enumerate();
@@ -35,14 +54,13 @@ void pcie_write_dword(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t funct
 
 // Helpers
 struct pcie_device {
-    bool present;
     uint16_t segment;
     uint8_t bus;
     uint8_t slot;
     uint8_t function;
 };
 
-struct pcie_device pcie_get_device(uint8_t class, uint8_t subclass, uint8_t programming_interface);
+struct pcie_device *pcie_get_device(uint8_t class, uint8_t subclass, uint8_t programming_interface);
 uintptr_t pcie_get_bar(struct pcie_device *device, int bar);
 
 #endif
