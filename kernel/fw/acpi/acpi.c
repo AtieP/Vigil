@@ -34,7 +34,7 @@ static struct acpi_rsdt *rsdt;
 static struct acpi_xsdt *xsdt;
 static bool use_xsdt = false;
 
-void acpi_init(struct stivale2_struct_tag_rsdp *rsdp) {
+void acpi_get_rsdt(struct stivale2_struct_tag_rsdp *rsdp) {
     struct acpi_rsdp *rsdp_table = (struct acpi_rsdp *) (rsdp->rsdp + MM_HIGHER_BASE);
     kcon_log(KCON_LOG_INFO, MODULE_NAME, "Found RSDP at %p", rsdp_table);
     rsdp_revision = rsdp_table->revision;

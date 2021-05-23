@@ -46,7 +46,7 @@ void kmain(struct stivale2_struct *bootloader_info) {
 	kheap_init();
 	idt_init();
 	exceptions_init();
-	acpi_init(rsdp);
+	acpi_get_rsdt(rsdp);
 	pcie_get_mcfg();
 	lapic_enable();
 	kcon_log(KCON_LOG_INFO, "kernel", "Total memory: %d MB, Usable memory: %d MB", pmm_get_memory().total / 1024 / 1024, pmm_get_memory().usable / 1024 / 1024);

@@ -122,7 +122,7 @@ struct acpi_fadt {
     uint16_t iapc_boot_arch;
     uint8_t reserved_2;
     uint32_t flags;
-    uint8_t reset_reg[12];
+    struct acpi_gas reset_reg;
     uint8_t reset_value;
     uint16_t arm_boot_arch;
     uint8_t fadt_minor_version;
@@ -192,7 +192,7 @@ struct acpi_madt_entry_nmi {
 extern uint8_t rsdp_revision;
 
 // ACPI Generic
-void acpi_init(struct stivale2_struct_tag_rsdp *rsdp);
+void acpi_get_rsdt(struct stivale2_struct_tag_rsdp *rsdp);
 void *acpi_get_table(const char *signature, size_t index);
 void acpi_sci_install();
 void acpi_sci_handler(struct interrupt_frame *int_frame, uint8_t vector, uint64_t error_code);

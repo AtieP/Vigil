@@ -120,7 +120,7 @@ void pcie_enumerate() {
         if (!handle) {
             segment = 0;
         } else {
-            if (lai_eval(&variable, node, &state) != LAI_ERROR_NONE) {
+            if (lai_eval(&variable, handle, &state) != LAI_ERROR_NONE) {
                 panic(MODULE_NAME, "Could not evaluate AML method");
             }
             if (lai_obj_get_integer(&variable, (uint64_t *) &segment) != LAI_ERROR_NONE) {
@@ -132,7 +132,7 @@ void pcie_enumerate() {
         if (!handle) {
             bus = 0;
         } else {
-            if (lai_eval(&variable, node, &state) != LAI_ERROR_NONE) {
+            if (lai_eval(&variable, handle, &state) != LAI_ERROR_NONE) {
                 panic(MODULE_NAME, "Could not evaluate AML method");
             }
             if (lai_obj_get_integer(&variable, (uint64_t *) &bus) != LAI_ERROR_NONE) {
