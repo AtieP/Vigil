@@ -27,6 +27,10 @@ void vector_create(struct vector *vector, size_t item_size) {
     vector->item_size = item_size;
 }
 
+void *vector_get(struct vector *vector, size_t index) {
+    return vector->data + (index * vector->item_size);
+}
+
 void vector_push(struct vector *vector, void *data) {
     mutex_lock(&vector->mutex);
     size_t vector_size = vector->items * vector->item_size;

@@ -29,6 +29,7 @@ struct vector {
 };
 
 void vector_create(struct vector *vector, size_t item_size);
+void *vector_get(struct vector *vector, size_t index);
 void vector_push(struct vector *vector, void *data);
 void vector_remove(struct vector *vector, size_t index);
 void vector_delete(struct vector *vector);

@@ -33,15 +33,14 @@ static uint32_t get_gsi_count(uintptr_t ioapic_address) {
 }
 
 static struct acpi_madt_entry_ioapic *get_ioapic_by_gsi(uint32_t gsi) {
-    struct acpi_madt_entry_ioapic *ioapic = madt_ioapics.data;
     for (size_t i = 0; i < madt_ioapics.items; i++) {
+        struct acpi_madt_entry_ioapic *ioapic = vector_get(&madt_ioapics, i);
         if (
             ioapic->gsi <= gsi
             && ioapic->gsi + get_gsi_count((uintptr_t) ioapic->ioapic_address + MM_HIGHER_BASE) > gsi
         ) {
             return ioapic;
         }
-        ioapic++;
     }
     panic(MODULE_NAME, "Unable to get IO/APIC via GSI %d", gsi);
 }
@@ -66,13 +65,12 @@ void ioapic_redirect_gsi(uint8_t lapic_id, uint32_t gsi, uint8_t vector, uint64_
 
 // Use this for legacy IRQs
 void ioapic_redirect_irq(uint8_t lapic_id, uint8_t irq, uint8_t vector, uint64_t flags) {
-    struct acpi_madt_entry_iso *isos = madt_isos.data;
     for (size_t i = 0; i < madt_isos.items; i++) {
-        if (isos->irq_source == irq) {
-            ioapic_redirect_gsi(lapic_id, isos->gsi, vector, (uint64_t) isos->flags | flags);
+        struct acpi_madt_entry_iso *iso = vector_get(&madt_isos, i);
+        if (iso->irq_source == irq) {
+            ioapic_redirect_gsi(lapic_id, iso->gsi, vector, (uint64_t) iso->flags | flags);
             return;
         }
-        isos++;
     }
     ioapic_redirect_gsi(lapic_id, (uint32_t) irq, vector, flags);
 }
