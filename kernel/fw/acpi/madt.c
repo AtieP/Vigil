@@ -39,19 +39,19 @@ void madt_init() {
             case ACPI_MADT_ENTRY_LAPIC: {
                 struct acpi_madt_entry_lapic *lapic = (struct acpi_madt_entry_lapic *) entry_header;
                 kcon_log(KCON_LOG_INFO, MODULE_NAME, "Found LAPIC with ID %d", lapic->apic_id);
-                vector_push(&madt_lapics, &lapic, sizeof(struct acpi_madt_entry_lapic));
+                vector_push(&madt_lapics, lapic, sizeof(struct acpi_madt_entry_lapic));
                 break;
             }
             case ACPI_MADT_ENTRY_IOAPIC: {
                 struct acpi_madt_entry_ioapic *ioapic = (struct acpi_madt_entry_ioapic *) entry_header;
                 kcon_log(KCON_LOG_INFO, MODULE_NAME, "Found IOAPIC with ID %d", ioapic->apic_id);
-                vector_push(&madt_ioapics, &ioapic, sizeof(struct acpi_madt_entry_ioapic));
+                vector_push(&madt_ioapics, ioapic, sizeof(struct acpi_madt_entry_ioapic));
                 break;
             }
             case ACPI_MADT_ENTRY_ISO: {
                 struct acpi_madt_entry_iso *iso = (struct acpi_madt_entry_iso *) entry_header;
                 kcon_log(KCON_LOG_INFO, MODULE_NAME, "Found ISO (IRQ %d redirected to GSI %d)", iso->irq_source, iso->gsi);
-                vector_push(&madt_isos, &iso, sizeof(struct acpi_madt_entry_iso));
+                vector_push(&madt_isos, iso, sizeof(struct acpi_madt_entry_iso));
                 break;
             }
             default:
