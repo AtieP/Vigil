@@ -64,7 +64,7 @@ static void parse_function(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t 
     device.bus = bus;
     device.slot = slot;
     device.function = function;
-    vector_push(&pcie_devices, &device, sizeof(struct pcie_device));
+    vector_push(&pcie_devices, &device);
 }
 
 static void enumerate_slot(uint16_t segment, uint8_t bus, uint8_t slot) {
@@ -225,9 +225,8 @@ void pcie_write_dword(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t funct
 }
 
 struct pcie_device *pcie_get_device(uint8_t class, uint8_t subclass, uint8_t programming_interface) {
-    size_t entries = pcie_devices.size / sizeof(struct pcie_device);
     struct pcie_device *device = pcie_devices.data;
-    for (size_t i = 0; i < entries; i++) {
+    for (size_t i = 0; i < pcie_devices.items; i++) {
         if (
             pcie_read_byte(device->segment, device->bus, device->slot, device->function, PCIE_CFG_CLASS) == class
             && pcie_read_byte(device->segment, device->bus, device->slot, device->function, PCIE_CFG_SUBCLASS) == subclass

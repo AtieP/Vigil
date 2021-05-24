@@ -23,12 +23,14 @@
 
 struct vector {
     void *data;
-    size_t size;
+    size_t items;
+    size_t item_size;
     struct mutex mutex;
 };
 
-void vector_create(struct vector *vector);
-void vector_push(struct vector *vector, void *data, size_t data_size);
+void vector_create(struct vector *vector, size_t item_size);
+void vector_push(struct vector *vector, void *data);
+void vector_remove(struct vector *vector, size_t index);
 void vector_delete(struct vector *vector);
 
 #endif

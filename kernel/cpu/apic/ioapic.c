@@ -34,8 +34,7 @@ static uint32_t get_gsi_count(uintptr_t ioapic_address) {
 
 static struct acpi_madt_entry_ioapic *get_ioapic_by_gsi(uint32_t gsi) {
     struct acpi_madt_entry_ioapic *ioapic = madt_ioapics.data;
-    size_t entries = madt_ioapics.size / sizeof(struct acpi_madt_entry_ioapic);
-    for (size_t i = 0; i < entries; i++) {
+    for (size_t i = 0; i < madt_ioapics.items; i++) {
         if (
             ioapic->gsi <= gsi
             && ioapic->gsi + get_gsi_count((uintptr_t) ioapic->ioapic_address + MM_HIGHER_BASE) > gsi
@@ -68,8 +67,7 @@ void ioapic_redirect_gsi(uint8_t lapic_id, uint32_t gsi, uint8_t vector, uint64_
 // Use this for legacy IRQs
 void ioapic_redirect_irq(uint8_t lapic_id, uint8_t irq, uint8_t vector, uint64_t flags) {
     struct acpi_madt_entry_iso *isos = madt_isos.data;
-    size_t entries = madt_isos.size / sizeof(struct acpi_madt_entry_iso);
-    for (size_t i = 0; i < entries; i++) {
+    for (size_t i = 0; i < madt_isos.items; i++) {
         if (isos->irq_source == irq) {
             ioapic_redirect_gsi(lapic_id, isos->gsi, vector, (uint64_t) isos->flags | flags);
             return;

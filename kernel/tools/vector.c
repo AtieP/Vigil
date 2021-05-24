@@ -21,18 +21,25 @@
 #include <tools/builtins.h>
 #include <tools/vector.h>
 
-void vector_create(struct vector *vector) {
+void vector_create(struct vector *vector, size_t item_size) {
     vector->data = NULL;
-    vector->size = 0;
+    vector->items = 0;
+    vector->item_size = item_size;
 }
 
-void vector_push(struct vector *vector, void *data, size_t data_size) {
+void vector_push(struct vector *vector, void *data) {
     mutex_lock(&vector->mutex);
-    void *ptr = kheap_realloc(vector->data, vector->size + data_size, vector->size);
-    memcpy(ptr + vector->size, data, data_size);
+    size_t vector_size = vector->items * vector->item_size;
+    void *ptr = kheap_realloc(vector->data, vector_size + vector->item_size, vector_size);
+    memcpy(ptr + vector_size, data, vector->item_size);
     vector->data = ptr;
-    vector->size += data_size;
+    vector->items++;
     mutex_unlock(&vector->mutex);
+}
+
+void vector_remove(struct vector *vector, size_t index) {
+    // just memcpy back
+    memcpy(vector->data + (index * vector->item_size), vector->data + ((index + 1) * vector->item_size), vector->item_size * vector->items - (index * vector->item_size));
 }
 
 void vector_delete(struct vector *vector) {
