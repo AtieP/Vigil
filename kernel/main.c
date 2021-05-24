@@ -26,7 +26,6 @@
 #include <fw/pcie/pcie.h>
 #include <misc/kcon.h>
 #include <mm/mm.h>
-#include <mp/sched.h>
 #include <tools/panic.h>
 #include <tools/vector.h>
 #include <lai/helpers/pm.h>
