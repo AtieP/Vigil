@@ -60,7 +60,20 @@ struct pcie_device {
     uint8_t function;
 };
 
+struct pcie_bar {
+    bool pio;
+    uintptr_t base;
+};
+
 struct pcie_device *pcie_get_device(uint8_t class, uint8_t subclass, uint8_t programming_interface);
-uintptr_t pcie_get_bar(struct pcie_device *device, int bar);
+struct pcie_bar pcie_get_bar(struct pcie_device *device, int index);
+
+uint8_t pcie_read_bar_byte(struct pcie_bar *bar, size_t offset);
+uint16_t pcie_read_bar_word(struct pcie_bar *bar, size_t offset);
+uint32_t pcie_read_bar_dword(struct pcie_bar *bar, size_t offset);
+
+void pcie_write_bar_byte(struct pcie_bar *bar, size_t offset, uint8_t data);
+void pcie_write_bar_word(struct pcie_bar *bar, size_t offset, uint16_t data);
+void pcie_write_bar_dword(struct pcie_bar *bar, size_t offset, uint32_t data);
 
 #endif

@@ -16,6 +16,7 @@
 */
 
 #include <stdint.h>
+#include <cpu/pio.h>
 #include <fw/acpi/acpi.h>
 #include <fw/pcie/pcie.h>
 #include <misc/kcon.h>
@@ -153,7 +154,7 @@ void pcie_enumerate() {
 
 uint8_t pcie_read_byte(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t function, uint16_t offset) {
     return *(
-        (uint8_t *) (
+        (volatile uint8_t *) (
             pcie_get_device_address(
                 pcie_get_segment_bus_entry(segment, bus),
                 bus, slot, function
@@ -165,7 +166,7 @@ uint8_t pcie_read_byte(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t func
 
 uint16_t pcie_read_word(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t function, uint16_t offset) {
     return *(
-        (uint16_t *) (
+        (volatile uint16_t *) (
             pcie_get_device_address(
                 pcie_get_segment_bus_entry(segment, bus),
                 bus, slot, function
@@ -177,7 +178,7 @@ uint16_t pcie_read_word(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t fun
 
 uint32_t pcie_read_dword(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t function, uint16_t offset) {
     return *(
-        (uint32_t *) (
+        (volatile uint32_t *) (
             pcie_get_device_address(
                 pcie_get_segment_bus_entry(segment, bus),
                 bus, slot, function
@@ -189,7 +190,7 @@ uint32_t pcie_read_dword(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t fu
 
 void pcie_write_byte(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t function, uint16_t offset, uint8_t data) {
     *(
-        (uint8_t *) (
+        (volatile uint8_t *) (
             pcie_get_device_address(
                 pcie_get_segment_bus_entry(segment, bus),
                 bus, slot, function
@@ -201,7 +202,7 @@ void pcie_write_byte(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t functi
 
 void pcie_write_word(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t function, uint16_t offset, uint16_t data) {
     *(
-        (uint16_t *) (
+        (volatile uint16_t *) (
             pcie_get_device_address(
                 pcie_get_segment_bus_entry(segment, bus),
                 bus, slot, function
@@ -213,7 +214,7 @@ void pcie_write_word(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t functi
 
 void pcie_write_dword(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t function, uint16_t offset, uint32_t data) {
     *(
-        (uint32_t *) (
+        (volatile uint32_t *) (
             pcie_get_device_address(
                 pcie_get_segment_bus_entry(segment, bus),
                 bus, slot, function
@@ -237,4 +238,78 @@ struct pcie_device *pcie_get_device(uint8_t class, uint8_t subclass, uint8_t pro
         device++;
     }
     return NULL;
+}
+
+struct pcie_bar pcie_get_bar(struct pcie_device *device, int index) {
+    if (index > 5) {
+        panic(MODULE_NAME, "BAR is greater than 5");
+    }
+    struct pcie_bar ret;
+    uint32_t bar = pcie_read_dword(device->segment, device->bus, device->slot, device->function, 0x10 + (index * 4));
+    if (bar & 1) {
+        // bar is i/o
+        ret.pio = true;
+        ret.base = bar & 0xfffc;
+        return ret;
+    } else {
+        // bar is mmio
+        ret.pio = false;
+        uint8_t kind = (bar >> 1) & 3;
+        if (kind == 0) {
+            // bar is 32 bit
+            ret.base = bar & 0xffffff0;
+            return ret;
+        }
+        if (kind == 2) {
+            // bar is 64 bit
+            ret.base = ((uint64_t) pcie_read_dword(device->segment, device->bus, device->slot, device->function, 0x10 + (index * 4 + 4)) << 32) | (bar & 0xfffffff0);
+            return ret;
+        }
+        panic(MODULE_NAME, "BAR is not 32 nor 64 bit");
+    }
+}
+
+uint8_t pcie_read_bar_byte(struct pcie_bar *bar, size_t offset) {
+    if (bar->pio) {
+        return inb(bar->base + offset);
+    }
+    return *((volatile uint8_t *) (bar->base + offset));
+}
+
+uint16_t pcie_read_bar_word(struct pcie_bar *bar, size_t offset) {
+    if (bar->pio) {
+        return inw(bar->base + offset);
+    }
+    return *((volatile uint16_t *) (bar->base + offset));
+}
+
+uint32_t pcie_read_bar_dword(struct pcie_bar *bar, size_t offset) {
+    if (bar->pio) {
+        return ind(bar->base + offset);
+    }
+    return *((volatile uint32_t *) (bar->base + offset));
+}
+
+void pcie_write_bar_byte(struct pcie_bar *bar, size_t offset, uint8_t data) {
+    if (bar->pio) {
+        outb(bar->base + offset, data);
+        return;
+    }
+    *((volatile uint8_t *) (bar->base + offset)) = data;
+}
+
+void pcie_write_bar_word(struct pcie_bar *bar, size_t offset, uint16_t data) {
+    if (bar->pio) {
+        outw(bar->base + offset, data);
+        return;
+    }
+    *((volatile uint16_t *) (bar->base + offset)) = data;
+}
+
+void pcie_write_bar_dword(struct pcie_bar *bar, size_t offset, uint32_t data) {
+    if (bar->pio) {
+        outd(bar->base + offset, data);
+        return;
+    }
+    *((volatile uint32_t *) (bar->base + offset)) = data;
 }
