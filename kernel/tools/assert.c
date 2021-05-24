@@ -20,6 +20,10 @@
 #include <tools/assert.h>
 
 __attribute__((__noreturn__)) void assert_fail(const char *assertion, const char *module, const char *message, const char *function, const char *filename, size_t line) {
-    kcon_log(KCON_LOG_NONE, "assert", "Assertion %s failed\n Location: %s:%s:%s:%d (%s)", module, assertion, function, filename, line, message);
+    if (message) {
+        kcon_log(KCON_LOG_NONE, "assert", "Assertion %s failed\nLocation: %s:%s:%s:%d (%s)", assertion, module, function, filename, line, message);
+    } else {
+        kcon_log(KCON_LOG_NONE, "assert", "Assertion %s failed\nLocation: %s:%s:%s:%d", assertion, module, function, filename, line);
+    }
     __builtin_unreachable();
 }
