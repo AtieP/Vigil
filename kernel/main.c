@@ -57,22 +57,6 @@ void kmain(struct stivale2_struct *bootloader_info) {
 	kheap_walkthrough();
 	kcon_log(KCON_LOG_INFO, "kernel", "Everything initialized successfully, waiting for IRQs");
 	asm volatile("sti");
-	struct vector a;
-	vector_create(&a, sizeof(int));
-	int b = 69;
-	int c = 420;
-	int d = 666;
-	vector_push(&a, &b);
-	vector_push(&a, &c);
-	vector_push(&a, &d);
-	for (size_t i = 0; i < 3; i++) {
-		kcon_log(KCON_LOG_INFO, "kernel", "%d", *(int *) vector_get(&a, i));
-	}
-	vector_remove(&a, 1);
-		for (size_t i = 0; i < 3; i++) {
-		kcon_log(KCON_LOG_INFO, "kernel", "%d", *(int *) vector_get(&a, i));
-	}
-	sched_init();
 	for (;;) {
 		asm volatile("hlt");
 	}
