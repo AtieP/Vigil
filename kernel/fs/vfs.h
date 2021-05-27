@@ -18,21 +18,31 @@
 #ifndef __FS_VFS_H__
 #define __FS_VFS_H__
 
-#define VFS_MAX_NAME_LEN 8
-
+#include <stdint.h>
 #include <mp/mutex.h>
+#include <tools/vector.h>
+
+#define VFS_FILE_LEN 8
+
+typedef signed long ssize_t;
+
+struct vfs_fs {
+    char id[VFS_FILE_LEN];
+    int (*open)(const char *path, int mode);
+    ssize_t (*read)(int fd, void *buf, size_t count);
+    ssize_t (*write)(int fd, const void *buf, size_t count);
+    int (*close)(int fd);
+};
 
 struct vfs_node {
-    char name[VFS_MAX_NAME_LEN];
+    char name[VFS_FILE_LEN];
     struct vfs_node *parent;
-    struct vfs_node *next;
-    struct vfs_node *child;
-    struct mutex mutex;
+    struct vector children;
+    struct vfs_fs *fs;
 };
 
 void vfs_init();
-struct vfs_node *vfs_get_node(const char *path);
-struct vfs_node *vfs_create_node(struct vfs_node *parent_node, const char *name);
-int vfs_delete_node(const char *name);
+struct vfs_node *vfs_node_append_child(struct vfs_node *parent, const char *name);
+void vfs_node_remove_child(struct vfs_node *parent, const char *name);
 
 #endif

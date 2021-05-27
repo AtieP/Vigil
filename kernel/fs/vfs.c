@@ -19,80 +19,53 @@
 #include <fs/vfs.h>
 #include <misc/kcon.h>
 #include <mm/mm.h>
-#include <mp/mutex.h>
 #include <tools/builtins.h>
-#include <tools/panic.h>
 
 #define MODULE_NAME "vfs"
 
-static struct vfs_node *root_node = NULL;
+static struct vfs_node *root;
 
 static size_t strlen_slash(const char *string) {
-    size_t len = 0;
-    while (*string != '/' && *string != '\0') {
+    size_t counter = 0;
+    while (*string != '\0' && *string != '/') {
         string++;
-        len++;
-    }
-    return len;
+        counter++;
+    };
+    return counter;
 }
 
 void vfs_init() {
-    root_node = kheap_calloc(sizeof(struct vfs_node));
-    root_node->name[0] = '/';
-    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Root node created successfully");
+    root = kheap_calloc(sizeof(struct vfs_node));
+    vector_create(&root->children, sizeof(struct vfs_node *));
+    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Successfully created root node");
 }
 
-struct vfs_node *vfs_get_node(const char *path) {
-    // okay don't complicate our life too much if the user just wants the root node
-    if (*path == '/' && *(path + 1) == '\0') {
-        return root_node;
+struct vfs_node *vfs_node_append_child(struct vfs_node *parent, const char *name) {
+    if (!parent) {
+        parent = root;
     }
-    struct vfs_node *node = root_node->child;
-    while (node) {
-        path++;
-        if (*path == '\0') {
-            break;
-        }
-        mutex_lock(&node->mutex);
-        // item: one of the parts of the path
-        // for example, lol in /hello/lol/yes/ is an item
-        size_t item_length = strlen_slash(path);
-        if (!strncmp(node->name, path, strlen(node->name))) {
-            path += item_length;
-            mutex_unlock(&node->mutex);
-            if (*path == '\0') {
-                return node;
-            }
-            node = node->child;
-            continue;
-        }
-        path += item_length;
-        mutex_unlock(&node->mutex);
-        node = node->next;     
-    }
-    return NULL;
-}
-
-struct vfs_node *vfs_create_node(struct vfs_node *parent_node, const char *name) {
-    mutex_lock(&parent_node->mutex);
-    struct vfs_node *new_node = kheap_calloc(sizeof(struct vfs_node));
-    // place the node somewhere
-    struct vfs_node *node = parent_node->child;
-    if (!node) {
-        parent_node->child = new_node;
-        node = new_node;
-    } else {
-        while (node->next) {
-            node = node->next;
-        }
-        node->next = new_node;
-    }
+    struct vfs_node *node = kheap_calloc(sizeof(struct vfs_node));
     memcpy(node->name, name, strlen(name));
-    mutex_unlock(&parent_node->mutex);
-    return new_node;
+    node->parent = parent;
+    node->fs = parent->fs;
+    vector_create(&node->children, sizeof(struct vfs_node *));
+    vector_push(&parent->children, node);
+    return node;
 }
 
-int vfs_delete_node(const char *name) {
-    (void) name;
-    panic(MODULE_NAME, "Not implemented yet");
+void vfs_node_remove_child(struct vfs_node *parent, const char *name) {
+    if (!parent) {
+        parent = root;
+    }
+    for (size_t i = 0; i < parent->children.items; i++) {
+        struct vfs_node *node = vector_get(&parent->children, i);
+        if (!strcmp(node->name, name)) {
+            // todo: recursively remove
+            vector_remove(&parent->children, i);
+            vector_delete(&node->children);
+            kheap_free(node);
+            return;
+        }
+    }
+    kcon_log(KCON_LOG_WARN, MODULE_NAME, "Could not delete node %s", name);
 }
