@@ -11,4 +11,4 @@ vigil.hdd
 
 # Other
 /3rdparty/
-/kernel/fw/acpi/lai/
+/kernel/fw/acpi/aml/lai/

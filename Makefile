@@ -47,7 +47,7 @@ tools:
 	$(MAKE) -C 3rdparty/limine/ limine-install
 
 lai:
-	git clone https://github.com/managarm/lai kernel/fw/acpi/lai --depth=1
+	git clone https://github.com/managarm/lai kernel/fw/acpi/aml/lai --depth=1
 
 # Testing
 run-bios:
