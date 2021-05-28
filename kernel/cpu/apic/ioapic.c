@@ -16,7 +16,7 @@
 */
 
 #include <cpu/apic/apic.h>
-#include <fw/acpi/acpi.h>
+#include <fw/acpi/tables/madt.h>
 #include <mm/mm.h>
 #include <misc/kcon.h>
 #include <tools/panic.h>
@@ -32,12 +32,12 @@ static uint32_t get_gsi_count(uintptr_t ioapic_address) {
     return (ioapic_read(ioapic_address, IOAPIC_VER) & 0xff0000) >> 16;
 }
 
-static struct acpi_madt_entry_ioapic *get_ioapic_by_gsi(uint32_t gsi) {
+static struct acpi_tables_madt_isc_ioapic *get_ioapic_by_gsi(uint32_t gsi) {
     for (size_t i = 0; i < madt_ioapics.items; i++) {
-        struct acpi_madt_entry_ioapic *ioapic = vector_get(&madt_ioapics, i);
+        struct acpi_tables_madt_isc_ioapic *ioapic = vector_get(&madt_ioapics, i);
         if (
             ioapic->gsi <= gsi
-            && ioapic->gsi + get_gsi_count((uintptr_t) ioapic->ioapic_address + MM_HIGHER_BASE) > gsi
+            && ioapic->gsi + get_gsi_count((uintptr_t) ioapic->address + MM_HIGHER_BASE) > gsi
         ) {
             return ioapic;
         }
@@ -57,16 +57,16 @@ void ioapic_write(uintptr_t ioapic_address, size_t reg, uint32_t data) {
 
 void ioapic_redirect_gsi(uint8_t lapic_id, uint32_t gsi, uint8_t vector, uint64_t flags) {
     uint64_t ioredtbl_data = ((uint64_t) lapic_id << 56) | ((uint64_t) vector) | flags;
-    struct acpi_madt_entry_ioapic *ioapic = get_ioapic_by_gsi(gsi);
+    struct acpi_tables_madt_isc_ioapic *ioapic = get_ioapic_by_gsi(gsi);
     size_t ioredtbl = (gsi - ioapic->gsi) * 2 + 16;
-    ioapic_write(ioapic->ioapic_address + MM_HIGHER_BASE, ioredtbl, (uint32_t) ioredtbl_data);
-    ioapic_write(ioapic->ioapic_address + MM_HIGHER_BASE, ioredtbl + 1, (uint32_t) (ioredtbl_data >> 32));
+    ioapic_write(ioapic->address + MM_HIGHER_BASE, ioredtbl, (uint32_t) ioredtbl_data);
+    ioapic_write(ioapic->address + MM_HIGHER_BASE, ioredtbl + 1, (uint32_t) (ioredtbl_data >> 32));
 }
 
 // Use this for legacy IRQs
 void ioapic_redirect_irq(uint8_t lapic_id, uint8_t irq, uint8_t vector, uint64_t flags) {
     for (size_t i = 0; i < madt_isos.items; i++) {
-        struct acpi_madt_entry_iso *iso = vector_get(&madt_isos, i);
+        struct acpi_tables_madt_isc_iso *iso = vector_get(&madt_isos, i);
         if (iso->irq_source == irq) {
             ioapic_redirect_gsi(lapic_id, iso->gsi, vector, (uint64_t) iso->flags | flags);
             return;

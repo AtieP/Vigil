@@ -22,13 +22,14 @@
 #include <cpu/idt.h>
 #include <cpu/pio.h>
 #include <fs/vfs.h>
-#include <fw/acpi/acpi.h>
+#include <fw/acpi/tables/common.h>
+#include <fw/acpi/tables/madt.h>
+#include <fw/acpi/sci.h>
 #include <fw/pcie/pcie.h>
 #include <misc/kcon.h>
 #include <mm/mm.h>
 #include <tools/panic.h>
 #include <tools/vector.h>
-#include <lai/helpers/pm.h>
 
 extern uint8_t font[];
 
@@ -46,11 +47,14 @@ void kmain(struct stivale2_struct *bootloader_info) {
 	kheap_init();
 	idt_init();
 	exceptions_init();
-	acpi_get_rsdt(rsdp);
+	acpi_get_rsdt(rsdp->rsdp);
+	madt_init();
 	pcie_get_mcfg();
 	lapic_enable();
 	kcon_log(KCON_LOG_INFO, "kernel", "Total memory: %d MB, Usable memory: %d MB", pmm_get_memory().total / 1024 / 1024, pmm_get_memory().usable / 1024 / 1024);
-	lai_init();
+	lai_set_acpi_revision(rsdp_revision);
+	lai_create_namespace();
+	acpi_sci_install();
 	pcie_enumerate();
 	vfs_init();
 	kheap_walkthrough();

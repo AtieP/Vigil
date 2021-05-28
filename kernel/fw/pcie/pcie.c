@@ -17,7 +17,8 @@
 
 #include <stdint.h>
 #include <cpu/pio.h>
-#include <fw/acpi/acpi.h>
+#include <fw/acpi/tables/common.h>
+#include <fw/acpi/tables/mcfg.h>
 #include <fw/pcie/pcie.h>
 #include <misc/kcon.h>
 #include <mm/mm.h>
@@ -28,10 +29,10 @@
 
 #define MODULE_NAME "pcie"
 
-static struct acpi_mcfg *pcie_mcfg;
+static struct acpi_tables_mcfg *pcie_mcfg;
 static struct vector pcie_devices;
 
-static uintptr_t pcie_get_device_address(struct acpi_mcfg_entry *mcfg_entry, uint8_t bus, uint8_t slot, uint8_t function) {
+static uintptr_t pcie_get_device_address(struct acpi_tables_mcfg_entry *mcfg_entry, uint8_t bus, uint8_t slot, uint8_t function) {
     return (
         mcfg_entry->base
         + (((bus - mcfg_entry->start_pci_bus) << 20) | (slot << 15) | (function << 12))
@@ -39,8 +40,8 @@ static uintptr_t pcie_get_device_address(struct acpi_mcfg_entry *mcfg_entry, uin
     );
 }
 
-static struct acpi_mcfg_entry *pcie_get_segment_bus_entry(uint16_t segment, uint8_t bus) {
-    size_t mcfg_entries = (pcie_mcfg->header.length - sizeof(struct acpi_mcfg)) / sizeof(struct acpi_mcfg_entry);
+static struct acpi_tables_mcfg_entry *pcie_get_segment_bus_entry(uint16_t segment, uint8_t bus) {
+    size_t mcfg_entries = (pcie_mcfg->sdt.length - sizeof(struct acpi_tables_mcfg_entry)) / sizeof(struct acpi_tables_mcfg_entry);
     for (size_t i = 0; i < mcfg_entries; i++) {
         if (
             pcie_mcfg->entries[i].segment_number == segment

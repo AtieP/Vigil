@@ -27,7 +27,7 @@ INTERNALCFLAGS := \
 	-fno-pic \
 	-no-pie \
 	-I. \
-	-Ifw/acpi/lai/include \
+	-Ifw/acpi/aml/lai/include \
 	-fsanitize=undefined
 
 INTERNALLDFLAGS := \

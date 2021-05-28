@@ -15,34 +15,22 @@
     along with Vigil.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <cpu/apic/apic.h>
-#include <cpu/idt.h>
+#include <stddef.h>
 #include <cpu/pio.h>
-#include <fw/acpi/acpi.h>
+#include <fw/acpi/tables/common.h>
 #include <fw/pcie/pcie.h>
 #include <misc/kcon.h>
 #include <mm/mm.h>
-#include <tools/panic.h>
 #include <lai/core.h>
-#include <lai/host.h>
-#include <lai/helpers/sci.h>
 
-#define MODULE_NAME "lai"
-
-void lai_init() {
-    acpi_sci_install();
-    lai_set_acpi_revision((int) rsdp_revision);
-    lai_create_namespace();
-    lai_enable_acpi(1); // 1: IO/APIC, otherwise PIC
-    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Namespace has been created and ACPI mode has been enabled, ready to receive SCIs");
-}
+#define MODULE_NAME "laihost"
 
 void *laihost_malloc(size_t size) {
     return kheap_alloc(size);
 }
 
-void *laihost_realloc(void *old, size_t newsize, size_t oldsize) {
-    return kheap_realloc(old, newsize, oldsize);
+void *laihost_realloc(void *base, size_t newsize, size_t oldsize) {
+    return kheap_realloc(base, newsize, oldsize);
 }
 
 void laihost_free(void *base, size_t size) {
@@ -50,31 +38,30 @@ void laihost_free(void *base, size_t size) {
     kheap_free(base);
 }
 
-void laihost_log(int level, const char *message) {
-    if (level == LAI_WARN_LOG) {
-        kcon_log(KCON_LOG_WARN, MODULE_NAME, message);
-    } else {
-        kcon_log(KCON_LOG_DEBUG, MODULE_NAME, message);
+void laihost_log(int level, const char *msg) {
+    if (level == LAI_DEBUG_LOG) {
+        kcon_log(KCON_LOG_DEBUG, MODULE_NAME, msg);
+        return;
     }
-}
-
-__attribute__((__noreturn__)) void laihost_panic(const char *message) {
-    panic(MODULE_NAME, "%s", message);
+    if (level == LAI_WARN_LOG) {
+        kcon_log(KCON_LOG_WARN, MODULE_NAME, msg);
+        return;
+    }
 }
 
 void *laihost_scan(const char *signature, size_t index) {
     return acpi_get_table(signature, index);
 }
 
-void *laihost_map(size_t base, size_t size) {
-    (void) size;
+void *laihost_map(size_t base, size_t length) {
+    (void) length;
     return (void *) (base + MM_HIGHER_BASE);
 }
 
-void laihost_unmap(void *base, size_t size) {
+void laihost_unmap(void *base, size_t length) {
     (void) base;
-    (void) size;
-}
+    (void) length;
+} 
 
 void laihost_outb(uint16_t port, uint8_t data) {
     outb(port, data);
@@ -124,6 +111,7 @@ uint32_t laihost_pci_readd(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t 
     return pcie_read_dword(segment, bus, slot, function, offset);
 }
 
+// todo: poll a timer or something, this is insane
 void laihost_sleep(uint64_t ms) {
     for (size_t i = 0; i < 1000 * ms; i++) {
         inb(0x80);
