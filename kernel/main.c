@@ -30,6 +30,7 @@
 #include <mm/mm.h>
 #include <tools/panic.h>
 #include <tools/vector.h>
+#include <lai/core.h>
 
 extern uint8_t font[];
 

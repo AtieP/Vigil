@@ -40,6 +40,37 @@ void vfs_init() {
     kcon_log(KCON_LOG_INFO, MODULE_NAME, "Successfully created root node");
 }
 
+
+struct vfs_node *vfs_node_get(struct vfs_node *parent, const char *path) {
+    struct vfs_node *parent_node;
+    struct vfs_node *child_node;
+    if (!parent) {
+        parent_node = root;
+    } else {
+        parent_node = parent;
+    }
+    while (1) {
+next:
+        if (*path == '\0') {
+            return NULL;
+        }
+        for (size_t i = 0; i < parent_node->children.items; i++) {
+            child_node = vector_get(&parent_node->children, i);
+            // item in this context: one of the elements of the path
+            size_t item_length = strlen_slash(path);
+            if (!strncmp(child_node->name, path, item_length)) {
+                path += item_length;
+                if (*path == '\0') {
+                    return child_node;
+                }
+                parent_node = child_node;
+                goto next;
+            }
+        }
+        return NULL;
+    }
+}
+
 struct vfs_node *vfs_node_append_child(struct vfs_node *parent, const char *name) {
     if (!parent) {
         parent = root;

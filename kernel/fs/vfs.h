@@ -42,6 +42,7 @@ struct vfs_node {
 };
 
 void vfs_init();
+struct vfs_node *vfs_node_get(struct vfs_node *parent, const char *path);
 struct vfs_node *vfs_node_append_child(struct vfs_node *parent, const char *name);
 void vfs_node_remove_child(struct vfs_node *parent, const char *name);
 
