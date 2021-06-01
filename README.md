@@ -11,12 +11,13 @@ Vigil is a x86_64 operating system.
 - ACPI support thanks to LAI
 - APIC support
 - UBSan
+- Basic kernel threading
 
 # WIP
 - POSIX compatibility
 - VFS
 - PCI Express drivers
-- Scheduling and multicore
+- Advanced scheduling and multicore
 - Userspace and GUI
 
 ## Building
