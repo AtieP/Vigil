@@ -19,7 +19,7 @@
 #define __FS_VFS_H__
 
 #include <stdint.h>
-#include <mp/mutex.h>
+#include <proc/mutex.h>
 #include <tools/vector.h>
 
 #define VFS_FILE_LEN 8

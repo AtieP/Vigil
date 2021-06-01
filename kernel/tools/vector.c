@@ -17,7 +17,7 @@
 
 #include <stddef.h>
 #include <mm/mm.h>
-#include <mp/mutex.h>
+#include <proc/mutex.h>
 #include <tools/builtins.h>
 #include <tools/vector.h>
 

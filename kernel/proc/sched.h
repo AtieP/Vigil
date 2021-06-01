@@ -15,18 +15,32 @@
     along with Vigil.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#ifndef __PROC_SCHED_H__
+#define __PROC_SCHED_H__
+
 #include <stdbool.h>
-#include <mp/atomics.h>
-#include <mp/mutex.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <cpu/idt.h>
+#include <proc/mutex.h>
+#include <tools/vector.h>
 
-// todo: make our own __sync_bool_compare_and_swap
+typedef size_t pid_t;
+typedef size_t tid_t;
 
-void mutex_lock(struct mutex *mutex) {
-    ATOMIC_INC(mutex->refcount);
-    while (!__sync_bool_compare_and_swap(&mutex->locked, false, true));
-    ATOMIC_DEC(mutex->refcount);
-}
+struct sched_process {
+    bool supervisor;
+    pid_t pid;
+    struct vector threads;
+};
 
-void mutex_unlock(struct mutex *mutex) {
-    __sync_bool_compare_and_swap(&mutex->locked, true, false);
-}
+struct sched_thread {
+    tid_t tid;
+    struct interrupt_frame gprs;
+    uint64_t cr3;
+};
+
+__attribute__((__noreturn__)) void sched_init(uintptr_t address);
+tid_t sched_new_kernel_thread(uintptr_t address);
+
+#endif

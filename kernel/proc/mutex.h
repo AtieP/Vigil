@@ -15,8 +15,8 @@
     along with Vigil.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef __MP_MUTEX_H__
-#define __MP_MUTEX_H__
+#ifndef __PROC_MUTEX_H__
+#define __PROC_MUTEX_H__
 
 #include <stdbool.h>
 #include <stddef.h>

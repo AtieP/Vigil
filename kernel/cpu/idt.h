@@ -51,6 +51,8 @@ struct interrupt_frame {
     uint64_t rcx;
     uint64_t rbx;
     uint64_t rax;
+    uint64_t reserved1;
+    uint64_t reserved2;
     uint64_t rip;
     uint64_t cs;
     uint64_t rflags;

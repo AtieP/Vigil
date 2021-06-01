@@ -15,23 +15,18 @@
     along with Vigil.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef __MP_ATOMICS_H__
-#define __MP_ATOMICS_H__
-
 #include <stdbool.h>
+#include <proc/atomics.h>
+#include <proc/mutex.h>
 
-#define ATOMIC_INC(value) { \
-    asm volatile( \
-        "lock inc %0" \
-        :: "m"(value) \
-    ); \
+// todo: make our own __sync_bool_compare_and_swap
+
+void mutex_lock(struct mutex *mutex) {
+    ATOMIC_INC(mutex->refcount);
+    while (!__sync_bool_compare_and_swap(&mutex->locked, false, true));
+    ATOMIC_DEC(mutex->refcount);
 }
 
-#define ATOMIC_DEC(value) { \
-    asm volatile( \
-        "lock dec %0" \
-        :: "m"(value) \
-    ); \
+void mutex_unlock(struct mutex *mutex) {
+    __sync_bool_compare_and_swap(&mutex->locked, true, false);
 }
-
-#endif

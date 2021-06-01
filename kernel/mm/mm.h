@@ -21,7 +21,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <boot/stivale2.h>
-#include <mp/mutex.h>
+#include <proc/mutex.h>
 
 #define MM_PAGE_SIZE (4096)
 #define MM_KERNEL_BASE (0xffffffff80000000)

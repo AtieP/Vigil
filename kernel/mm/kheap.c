@@ -19,7 +19,7 @@
 #include <stdint.h>
 #include <misc/kcon.h>
 #include <mm/mm.h>
-#include <mp/mutex.h>
+#include <proc/mutex.h>
 #include <tools/assert.h>
 #include <tools/builtins.h>
 #include <tools/panic.h>

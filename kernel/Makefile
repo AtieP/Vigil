@@ -8,6 +8,7 @@ CFILES := $(shell find . -type f -name '*.c')
 LDFILE = linker.ld
 ASFILES := $(shell find . -type f -name '*.asm')
 OFILES := $(CFILES:.c=.o) $(ASFILES:.asm=.o)
+HFILES := $(shell find . -type f -name '*.h')
 
 # User controllable flags
 CFLAGS = -Wall -Wextra -O2 -pipe
@@ -40,7 +41,6 @@ INTERNALASFLAGS := \
 
 $(KERNEL): $(OFILES)
 	$(LD) -T$(LDFILE) $(INTERNALLDFLAGS) $(OFILES) -o $@
-
 
 %.o: %.asm
 	$(AS) $(INTERNALASFLAGS) $< -o $@

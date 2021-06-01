@@ -15,23 +15,23 @@
     along with Vigil.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef __TOOLS_VECTOR_H__
-#define __TOOLS_VECTOR_H__
+#ifndef __PROC_ATOMICS_H__
+#define __PROC_ATOMICS_H__
 
-#include <stddef.h>
-#include <proc/mutex.h>
+#include <stdbool.h>
 
-struct vector {
-    void *data;
-    size_t items;
-    size_t item_size;
-    struct mutex mutex;
-};
+#define ATOMIC_INC(value) { \
+    asm volatile( \
+        "lock inc %0" \
+        :: "m"(value) \
+    ); \
+}
 
-void vector_create(struct vector *vector, size_t item_size);
-void *vector_get(struct vector *vector, size_t index);
-void vector_push(struct vector *vector, void *data);
-void vector_remove(struct vector *vector, size_t index);
-void vector_delete(struct vector *vector);
+#define ATOMIC_DEC(value) { \
+    asm volatile( \
+        "lock dec %0" \
+        :: "m"(value) \
+    ); \
+}
 
 #endif

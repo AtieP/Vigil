@@ -28,11 +28,22 @@
 #include <fw/pcie/pcie.h>
 #include <misc/kcon.h>
 #include <mm/mm.h>
+#include <proc/sched.h>
 #include <tools/panic.h>
 #include <tools/vector.h>
 #include <lai/core.h>
 
 extern uint8_t font[];
+
+void kthread2() {
+	kcon_puts("Hello from kernel thread 2!\n");
+	for (;;) {}
+}
+void kthread1() {
+	sched_new_kernel_thread((uintptr_t) kthread2);
+	kcon_puts("Hello from kernel thread 1!\n");
+	for (;;) {}
+}
 
 void kmain(struct stivale2_struct *bootloader_info) {
     struct stivale2_struct_tag_framebuffer *fb = stivale2_get_tag(bootloader_info, STIVALE2_STRUCT_TAG_FRAMEBUFFER_ID);
@@ -60,9 +71,6 @@ void kmain(struct stivale2_struct *bootloader_info) {
 	vfs_init();
 	kheap_walkthrough();
 	kcon_log(KCON_LOG_INFO, "kernel", "Everything initialized successfully, waiting for IRQs");
-	asm volatile("sti");
-	for (;;) {
-		asm volatile("hlt");
-	}
+	sched_init((uintptr_t) kthread1);
 	panic("kernel", "End of kernel");
 }

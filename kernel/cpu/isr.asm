@@ -55,22 +55,20 @@ idt_global_pre_handler_asm:
 .check_cs:
     ; cs is supposed to be here if an error code
     ; was pushed
-    cmp [rsp+24], word 0x08
+    cmp [rsp+24], dword 0x08
     je .call_c_global_handler
 
     ; fake error code
     mov [rsp-16], rax
     mov rax, [rsp]
     mov [rsp-8], rax
-    mov qword [rsp], 0
-    mov rax, [rsp-16]
     sub rsp, 8
+    mov rax, [rsp-8]
 
 .call_c_global_handler:
     pushaq
 
     mov rdi, rsp
-    add rdi, 16 ; eliminate error code and vector from stack
     mov rsi, [rsp+120] ; vector
     mov rdx, [rsp+128] ; error code
     call idt_global_handler
@@ -84,7 +82,7 @@ idt_global_pre_handler_asm:
 dq idt_pre_handler_%1
 %endmacro
 
-; Hardcodes thr addresses of all 256 interrupt thunks
+; Hardcodes the addresses of all 256 interrupt thunks
 global idt_pre_handlers
 idt_pre_handlers:
 %assign i 0

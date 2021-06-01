@@ -20,7 +20,7 @@
 #include <stdint.h>
 #include <misc/kcon.h>
 #include <mm/mm.h>
-#include <mp/mutex.h>
+#include <proc/mutex.h>
 #include <tools/builtins.h>
 
 uint8_t font[] = {
