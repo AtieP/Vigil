@@ -36,11 +36,13 @@
 extern uint8_t font[];
 
 void kthread2() {
-	for (;;) kcon_puts("Hello from kernel thread 2!\n");
+	kcon_puts("Hello from kernel thread 2!\n");
+	for (;;) {}
 }
 void kthread1() {
 	sched_new_kernel_thread((uintptr_t) kthread2);
-	for (size_t i = 0;i<10;i++) kcon_puts("AAAAAAAAAAAAAAAAA\n");
+	kcon_puts("Hello from kernel thread 1!\n");
+	for (;;) {}
 }
 
 void kmain(struct stivale2_struct *bootloader_info) {
