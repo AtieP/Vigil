@@ -99,7 +99,7 @@ tid_t sched_new_kernel_thread(uintptr_t address) {
     thread.gprs.cs = GDT_KERNEL_CODE64_SEL;
     thread.gprs.ss = GDT_KERNEL_DATA_SEL;
     thread.gprs.rip = address;
-    thread.gprs.rflags = 0x286;
+    thread.gprs.rflags = 0x202;
     thread.gprs.rsp = (uintptr_t) pmm_calloc(MM_PAGE_SIZE) + MM_HIGHER_BASE;
     vector_push(&kernel->threads, &thread);
     return thread.tid;
