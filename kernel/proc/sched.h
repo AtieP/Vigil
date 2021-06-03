@@ -29,12 +29,12 @@ typedef size_t pid_t;
 typedef size_t tid_t;
 
 struct sched_process {
-    bool supervisor;
     pid_t pid;
     struct vector threads;
 };
 
 struct sched_thread {
+    bool active;
     tid_t tid;
     struct interrupt_frame gprs;
     uint64_t cr3;
@@ -42,5 +42,6 @@ struct sched_thread {
 
 __attribute__((__noreturn__)) void sched_init(uintptr_t address);
 tid_t sched_new_kernel_thread(uintptr_t address);
+void sched_kill_kernel_thread(tid_t tid);
 
 #endif

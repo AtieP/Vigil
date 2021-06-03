@@ -43,6 +43,7 @@ __attribute__((__noreturn__)) static void sched_next(struct interrupt_frame *gpr
         memcpy(&current_thread->gprs, gprs, sizeof(struct interrupt_frame));
     }
     // get next thread to execute
+get_next_thread:
     if (current_tid < current_process->threads.items - 1) {
         current_tid++;
         next_thread = vector_get(&current_process->threads, current_tid);
@@ -54,6 +55,9 @@ __attribute__((__noreturn__)) static void sched_next(struct interrupt_frame *gpr
         current_pid = 0;
         current_tid = 0;
         next_thread = vector_get(&((struct sched_process *) vector_get(&processes, current_pid))->threads, current_tid);
+    }
+    if (!next_thread->active) {
+        goto get_next_thread;
     }
     lapic_eoi();
     asm volatile(
@@ -95,6 +99,7 @@ __attribute__((__noreturn__)) void sched_init(uintptr_t address) {
 tid_t sched_new_kernel_thread(uintptr_t address) {
     struct sched_process *kernel = vector_get(&processes, 0);
     struct sched_thread thread;
+    thread.active = true;
     thread.tid = kernel->threads.items - 1;
     thread.gprs.cs = GDT_KERNEL_CODE64_SEL;
     thread.gprs.ss = GDT_KERNEL_DATA_SEL;
@@ -111,6 +116,5 @@ void sched_kill_kernel_thread(tid_t tid) {
     if (!thread) {
         kcon_log(KCON_LOG_WARN, MODULE_NAME, "Could not get kernel thread with TID %d", tid);
     }
-    kheap_free(thread);
-    vector_remove(&kernel->threads, tid);
+    thread->active = false;
 }
