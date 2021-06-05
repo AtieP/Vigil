@@ -411,7 +411,7 @@ void kcon_printf(const char *fmt, va_list args) {
 				kheap_free(string);
             }
 			if (*fmt == 'd') {
-				char *string = kheap_calloc(17);
+				char *string = kheap_calloc(21);
 				uint64_t number = va_arg(args, uint64_t);
 				for (int i = 20; i > 0;) {
 					string[--i] = number % 10 + '0';
