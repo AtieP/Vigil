@@ -16,6 +16,7 @@
 */
 
 #include <stddef.h>
+#include <cpu/halt.h>
 #include <misc/kcon.h>
 #include <tools/assert.h>
 
@@ -25,5 +26,6 @@ __attribute__((__noreturn__)) void assert_fail(const char *assertion, const char
     } else {
         kcon_log(KCON_LOG_NONE, "assert", "Assertion %s failed\nLocation: %s:%s:%s:%d", assertion, module, function, filename, line);
     }
+    halt();
     __builtin_unreachable();
 }

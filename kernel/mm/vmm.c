@@ -71,6 +71,10 @@ void vmm_unmap_page(struct vmm_pagemap *pagemap, uintptr_t virtual_address) {
     mutex_unlock(&kernel_pagemap.mutex);
 }
 
+struct vmm_pagemap *vmm_get_kernel_pagemap() {
+    return &kernel_pagemap;
+}
+
 void vmm_init(struct stivale2_struct_tag_memmap *memory_map) {
     (void) memory_map;
 
@@ -84,6 +88,6 @@ void vmm_init(struct stivale2_struct_tag_memmap *memory_map) {
         vmm_map_page(&kernel_pagemap, i, i + MM_HIGHER_BASE, 0b11);
     }
 
-    vmm_switch_pagemap((uintptr_t) kernel_pagemap.pml4);
+    vmm_switch_pagemap(&kernel_pagemap);
     kcon_log(KCON_LOG_INFO, MODULE_NAME, "Higher half and kernel mapped successfully");
 }

@@ -298,6 +298,9 @@ static int y_position;
 static uint32_t foreground_color = 0xffffff;
 static uint32_t background_color = 0x000000;
 
+static struct mutex putc_mutex;
+static struct mutex log_mutex;
+
 void kcon_init(uint32_t *framebuffer, uint16_t width, uint16_t height, uint16_t pitch) {
     fb = (uint32_t *) ((uintptr_t) framebuffer + MM_HIGHER_BASE);
     fb_width = width;
@@ -335,6 +338,7 @@ static void kcon_putpx(int x, int y, uint32_t color) {
 }
 
 void kcon_putc(int ch) {
+	mutex_lock(&putc_mutex);
     if (ch == '\n') {
         goto newline;
     }
@@ -362,6 +366,7 @@ newline:
 	if (y_position >= fb_height / font_height - 1) {
 		kcon_scroll();
 	}
+	mutex_unlock(&putc_mutex);
 }
 
 void kcon_scroll() {
@@ -397,17 +402,16 @@ void kcon_printf(const char *fmt, va_list args) {
                 }
             }
             if (*fmt == 'x' || *fmt == 'p') {
-                char string[17];
-                memset(string, 0, 17);
+                char *string = kheap_calloc(17);
                 uint64_t number = va_arg(args, uint64_t);
                 for (int i = 16; i > 0; number >>= 4) {
                     string[--i] = "0123456789abcdef"[number & 0x0f];
                 }
 				kcon_puts(string);
+				kheap_free(string);
             }
 			if (*fmt == 'd') {
-				char string[21];
-				memset(string, 0, 21);
+				char *string = kheap_calloc(17);
 				uint64_t number = va_arg(args, uint64_t);
 				for (int i = 20; i > 0;) {
 					string[--i] = number % 10 + '0';
@@ -418,6 +422,7 @@ void kcon_printf(const char *fmt, va_list args) {
 					counter++;
 				}
 				kcon_puts(&string[counter]);
+				kheap_free(string);
 			}
         } else {
             kcon_putc(*fmt);
@@ -427,6 +432,7 @@ void kcon_printf(const char *fmt, va_list args) {
 }
 
 void kcon_log(enum kcon_log_level level, const char *module, const char *fmt, ...) {
+	mutex_lock(&log_mutex);
     if (module) {
         kcon_puts(module);
         kcon_puts(": ");
@@ -450,4 +456,5 @@ void kcon_log(enum kcon_log_level level, const char *module, const char *fmt, ..
     kcon_printf(fmt, args);
     va_end(args);
     kcon_putc('\n');
+	mutex_unlock(&log_mutex);
 }

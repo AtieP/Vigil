@@ -55,9 +55,10 @@ struct vmm_pagemap {
 struct vmm_pagemap vmm_new_pagemap();
 void vmm_map_page(struct vmm_pagemap *pagemap, uintptr_t physical_address, uintptr_t virtual_address, uint64_t flags);
 void vmm_unmap_page(struct vmm_pagemap *pagemap, uintptr_t virtual_address);
-static inline void vmm_switch_pagemap(uintptr_t pagemap) {
-    asm volatile("mov %0, %%cr3" :: "r"(pagemap) : "memory");
+static inline void vmm_switch_pagemap(struct vmm_pagemap *pagemap) {
+    asm volatile("mov %0, %%cr3" :: "r"((uintptr_t) pagemap->pml4) : "memory");
 }
+struct vmm_pagemap *vmm_get_kernel_pagemap();
 void vmm_init(struct stivale2_struct_tag_memmap *memory_map);
 
 /*

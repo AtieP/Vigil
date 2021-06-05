@@ -60,11 +60,11 @@ struct interrupt_frame {
     uint64_t ss;
 } __attribute__((__packed__));
 
-typedef void (*idt_handler_t)(struct interrupt_frame *int_frame, uint8_t vector, uint64_t error_code);
+typedef void (*idt_handler_t)(struct interrupt_frame *, uint8_t, uint64_t);
 
 uint8_t idt_allocate_interrupt(idt_handler_t handler);
 void idt_register_handler(uint8_t vector, idt_handler_t handler, uint8_t ist_entry, uint8_t type);
 void idt_init();
-void idt_reload(struct idt_register idt_reg);
+void idt_reload_reg();
 
 #endif

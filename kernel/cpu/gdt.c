@@ -23,6 +23,8 @@ static struct {
     // add tss here later
 } __attribute__((__packed__)) gdt;
 
+static struct gdt_register gdt_reg;
+
 void gdt_init() {
     // null descriptor
     gdt.entry[0].limit_low = 0;
@@ -64,12 +66,15 @@ void gdt_init() {
     gdt.entry[4].granularity = 0;
     gdt.entry[4].base_high = 0;
 
-    struct gdt_register gdt_reg;
     gdt_reg.limit = (uint16_t) sizeof(gdt) - 1;
     gdt_reg.base = (uint64_t) &gdt;
-    asm volatile("lgdt %0" :: "m"(gdt_reg) : "memory");
 
+    gdt_reload_reg();
     gdt_reload_selectors(GDT_KERNEL_CODE64_SEL, GDT_KERNEL_DATA_SEL);
+}
+
+void gdt_reload_reg() {
+    asm volatile("lgdt %0" :: "m"(gdt_reg) : "memory");
 }
 
 void gdt_reload_selectors(uint16_t code, uint16_t data) {

@@ -87,6 +87,7 @@ void lapic_enable();
 uint32_t lapic_read(size_t reg);
 void lapic_write(size_t reg, uint32_t data);
 uint8_t lapic_get_id();
+void lapic_ipi(uint8_t lapic_id, uint8_t vector);
 void lapic_eoi();
 
 /*

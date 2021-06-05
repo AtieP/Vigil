@@ -22,10 +22,18 @@
 
 static uint8_t stack[MM_PAGE_SIZE * 32];
 
+static struct stivale2_header_tag_smp smp = {
+    .tag = {
+        .identifier = STIVALE2_HEADER_TAG_SMP_ID,
+        .next = 0
+    },
+    .flags = 0
+};
+
 static struct stivale2_header_tag_framebuffer fb = {
     .tag = {
         .identifier = STIVALE2_HEADER_TAG_FRAMEBUFFER_ID,
-        .next = 0
+        .next = (uintptr_t) &smp
     },
     .framebuffer_width = 0,
     .framebuffer_height = 0,

@@ -24,10 +24,6 @@
 
 #define MODULE_NAME "IO/APIC"
 
-// fw/acpi/madt.c
-extern struct vector madt_ioapics;
-extern struct vector madt_isos;
-
 static uint32_t get_gsi_count(uintptr_t ioapic_address) {
     return (ioapic_read(ioapic_address, IOAPIC_VER) & 0xff0000) >> 16;
 }

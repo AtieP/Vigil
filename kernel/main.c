@@ -21,6 +21,7 @@
 #include <cpu/gdt.h>
 #include <cpu/idt.h>
 #include <cpu/pio.h>
+#include <cpu/smp.h>
 #include <fs/vfs.h>
 #include <fw/acpi/tables/common.h>
 #include <fw/acpi/tables/madt.h>
@@ -40,6 +41,7 @@ void kthread2() {
 	for (;;) {}
 }
 void kthread1() {
+	kcon_log(KCON_LOG_INFO, "kernel", "Everything initialized successfully, waiting for IRQs");
 	sched_new_kernel_thread((uintptr_t) kthread2);
 	kcon_puts("Hello from kernel thread 1!\n");
 	for (;;) {}
@@ -49,6 +51,7 @@ void kmain(struct stivale2_struct *bootloader_info) {
     struct stivale2_struct_tag_framebuffer *fb = stivale2_get_tag(bootloader_info, STIVALE2_STRUCT_TAG_FRAMEBUFFER_ID);
 	struct stivale2_struct_tag_rsdp *rsdp = stivale2_get_tag(bootloader_info, STIVALE2_STRUCT_TAG_RSDP_ID);
 	struct stivale2_struct_tag_memmap *memory_map = stivale2_get_tag(bootloader_info, STIVALE2_STRUCT_TAG_MEMMAP_ID);
+	struct stivale2_struct_tag_smp *smp = stivale2_get_tag(bootloader_info, STIVALE2_STRUCT_TAG_SMP_ID);
 
 	gdt_init();
     kcon_init((uint32_t *) fb->framebuffer_addr, fb->framebuffer_width, fb->framebuffer_height, fb->framebuffer_pitch);
@@ -70,7 +73,7 @@ void kmain(struct stivale2_struct *bootloader_info) {
 	pcie_enumerate();
 	vfs_init();
 	kheap_walkthrough();
-	kcon_log(KCON_LOG_INFO, "kernel", "Everything initialized successfully, waiting for IRQs");
+	smp_init(smp);
 	sched_init((uintptr_t) kthread1);
 	panic("kernel", "End of kernel");
 }

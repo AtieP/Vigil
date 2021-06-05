@@ -34,7 +34,9 @@ static struct vector processes;
 static pid_t current_pid = 0;
 static tid_t current_tid = 0;
 
-__attribute__((__noreturn__)) static void sched_next(struct interrupt_frame *gprs) {
+static void sched_next(struct interrupt_frame *gprs, uint8_t vector, uint64_t error_code) {
+    (void) vector;
+    (void) error_code;
     struct sched_process *current_process = vector_get(&processes, current_pid);
     struct sched_thread *current_thread = vector_get(&current_process->threads, current_tid);
     struct sched_thread *next_thread;
@@ -92,7 +94,7 @@ __attribute__((__noreturn__)) void sched_init(uintptr_t address) {
     vector_push(&processes, &kernel);
     sched_new_kernel_thread(address);
     ioapic_redirect_irq(lapic_get_id(), 0, idt_allocate_interrupt((idt_handler_t) sched_next), 0);
-    sched_next(NULL);
+    sched_next(NULL, 0, 0);
     __builtin_unreachable();
 }
 

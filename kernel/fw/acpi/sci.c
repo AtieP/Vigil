@@ -28,7 +28,10 @@
 
 #define MODULE_NAME "acpi"
 
-static void sci_handler() {
+static void sci_handler(struct interrupt_frame *int_frame, uint8_t vector, uint64_t error_code) {
+    (void) int_frame;
+    (void) vector;
+    (void) error_code;
     uint16_t sci_event = lai_get_sci_event();
     if (sci_event & ACPI_POWER_BUTTON) {
         kcon_log(KCON_LOG_INFO, MODULE_NAME, "Power button pressed!");
@@ -44,9 +47,9 @@ void acpi_sci_install() {
     assert(fadt != NULL, MODULE_NAME, "FADT not found");
     assert(madt != NULL, MODULE_NAME, "MADT not found");
     if (madt->flags & 1) {
-        ioapic_redirect_irq(lapic_get_id(), fadt->sci_int, idt_allocate_interrupt((idt_handler_t) sci_handler), 1 << 15);
+        ioapic_redirect_irq(lapic_get_id(), fadt->sci_int, idt_allocate_interrupt(sci_handler), 1 << 15);
     } else {
-        ioapic_redirect_gsi(lapic_get_id(), fadt->sci_int, idt_allocate_interrupt((idt_handler_t) sci_handler), 1 << 15);
+        ioapic_redirect_gsi(lapic_get_id(), fadt->sci_int, idt_allocate_interrupt(sci_handler), 1 << 15);
     }
     lai_enable_acpi(1); // 0: PIC, 1: IO/APIC, 2: IO/SAPIC (only for IA-64)
 }

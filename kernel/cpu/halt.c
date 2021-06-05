@@ -15,32 +15,28 @@
     along with Vigil.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef __CPU_GDT_H__
-#define __CPU_GDT_H__
-
+#include <stddef.h>
 #include <stdint.h>
+#include <cpu/apic/apic.h>
+#include <cpu/halt.h>
+#include <cpu/idt.h>
+#include <fw/acpi/tables/madt.h>
 
-#define GDT_KERNEL_CODE64_SEL (0x08)
-#define GDT_KERNEL_DATA_SEL (0x10)
-#define GDT_USER_CODE64_SEL (0x1b)
-#define GDT_USER_DATA_SEL (0x23)
+__attribute__((__noreturn__)) void halt() {
+    // call the halt interrupt to all cores
+    for (size_t i = 0; i < madt_lapics.items; i++) {
+        struct acpi_tables_madt_isc_lapic *lapic = vector_get(&madt_lapics, i);
+        if (lapic->apic_id == lapic_get_id()) {
+            continue;
+        }
+        lapic_ipi(lapic->apic_id, HALT_VECTOR);
+    }
+    HALT_TEMPLATE();
+}
 
-struct gdt_entry {
-    uint16_t limit_low;
-    uint16_t base_low;
-    uint8_t base_mid;
-    uint8_t access;
-    uint8_t granularity;
-    uint8_t base_high;
-} __attribute__((__packed__));
-
-struct gdt_register {
-    uint16_t limit;
-    uint64_t base;
-} __attribute__((__packed__));
-
-void gdt_init();
-void gdt_reload_reg();
-void gdt_reload_selectors(uint16_t code, uint16_t data);
-
-#endif
+void halt_interrupt_handler(struct interrupt_frame *int_frame, uint8_t vector, uint64_t error_code) {
+    (void) int_frame;
+    (void) vector;
+    (void) error_code;
+    HALT_TEMPLATE();
+}

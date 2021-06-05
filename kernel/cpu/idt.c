@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include <cpu/exceptions.h>
 #include <cpu/gdt.h>
+#include <cpu/halt.h>
 #include <cpu/idt.h>
 #include <misc/kcon.h>
 #include <tools/panic.h>
@@ -28,6 +29,7 @@
 // Todo: make this suitable for multiprocessor systems
 
 static struct idt_entry idt[256];
+struct idt_register idt_reg;
 
 // Differences between those two:
 // The first one contains the addresses to the assembly stubs,
@@ -76,13 +78,14 @@ static void idt_populate_pre_handlers() {
 
 void idt_init() {
     idt_populate_pre_handlers();
-    struct idt_register idt_reg;
     idt_reg.limit = (uint16_t) sizeof(idt) - 1;
     idt_reg.base = (uint64_t) &idt;
-    idt_reload(idt_reg);
+    // create the halt interrupt
+    idt_register_handler(HALT_VECTOR, halt_interrupt_handler, 0, 0b10001111);
+    idt_reload_reg();
     kcon_log(KCON_LOG_INFO, MODULE_NAME, "IDT installed");
 }
 
-void idt_reload(struct idt_register idt_reg) {
+void idt_reload_reg() {
     asm volatile("lidt %0" :: "m"(idt_reg) : "memory");
 }
