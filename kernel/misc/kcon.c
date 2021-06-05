@@ -298,8 +298,8 @@ static int y_position;
 static uint32_t foreground_color = 0xffffff;
 static uint32_t background_color = 0x000000;
 
-static struct mutex putc_mutex;
-static struct mutex log_mutex;
+static struct mutex putc_mutex = {0};
+static struct mutex log_mutex = {0};
 
 void kcon_init(uint32_t *framebuffer, uint16_t width, uint16_t height, uint16_t pitch) {
     fb = (uint32_t *) ((uintptr_t) framebuffer + MM_HIGHER_BASE);

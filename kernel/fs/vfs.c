@@ -26,7 +26,7 @@
 #define MODULE_NAME "vfs"
 
 static struct vfs_node *root;
-static struct mutex vfs_mutex;
+static struct mutex vfs_mutex = {0};
 
 static size_t strlen_slash(const char *string) {
     size_t counter = 0;

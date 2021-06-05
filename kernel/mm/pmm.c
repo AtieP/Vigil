@@ -25,7 +25,7 @@
 #include <tools/builtins.h>
 #include <tools/panic.h>
 
-static struct mutex pmm_mutex;
+static struct mutex pmm_mutex = {0};
 
 #define MODULE_NAME "pmm"
 

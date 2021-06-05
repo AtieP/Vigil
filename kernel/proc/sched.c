@@ -88,7 +88,7 @@ get_next_thread:
 }
 
 __attribute__((__noreturn__)) void sched_init(uintptr_t address) {
-    struct sched_process kernel;
+    struct sched_process kernel = {0};
     vector_create(&kernel.threads, sizeof(struct sched_thread));
     vector_create(&processes, sizeof(struct sched_process));
     vector_push(&processes, &kernel);
@@ -100,7 +100,7 @@ __attribute__((__noreturn__)) void sched_init(uintptr_t address) {
 
 tid_t sched_new_kernel_thread(uintptr_t address) {
     struct sched_process *kernel = vector_get(&processes, 0);
-    struct sched_thread thread;
+    struct sched_thread thread = {0};
     thread.active = true;
     thread.tid = kernel->threads.items - 1;
     thread.gprs.cs = GDT_KERNEL_CODE64_SEL;
