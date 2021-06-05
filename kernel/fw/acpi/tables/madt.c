@@ -40,7 +40,7 @@ void madt_init() {
                 struct acpi_tables_madt_isc_lapic *lapic = (struct acpi_tables_madt_isc_lapic *) isc;
                 // Do not take in count disabled cores
                 if (lapic->apic_id == 0xff || lapic->flags & (1 << 1)) {
-                    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Found LAPIC with ID %d, but apparently it cannot be used for work");
+                    kcon_log(KCON_LOG_INFO, MODULE_NAME, "Found LAPIC with ID %d, but apparently it cannot be used for work", lapic->apic_id);
                     break;
                 }
                 kcon_log(KCON_LOG_INFO, MODULE_NAME, "Found LAPIC with ID %d", lapic->apic_id);
