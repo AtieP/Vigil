@@ -58,7 +58,10 @@ get_next_thread:
         current_tid = 0;
         next_thread = vector_get(&((struct sched_process *) vector_get(&processes, current_pid))->threads, current_tid);
     }
-    if (!next_thread->active) {
+    if (!next_thread->valid) {
+        goto get_next_thread;
+    }
+    if (next_thread->running) {
         goto get_next_thread;
     }
     lapic_eoi();
@@ -101,7 +104,8 @@ __attribute__((__noreturn__)) void sched_init(uintptr_t address) {
 tid_t sched_new_kernel_thread(uintptr_t address) {
     struct sched_process *kernel = vector_get(&processes, 0);
     struct sched_thread thread = {0};
-    thread.active = true;
+    thread.running = false;
+    thread.valid = true;
     thread.tid = kernel->threads.items - 1;
     thread.gprs.cs = GDT_KERNEL_CODE64_SEL;
     thread.gprs.ss = GDT_KERNEL_DATA_SEL;
@@ -118,5 +122,6 @@ void sched_kill_kernel_thread(tid_t tid) {
     if (!thread) {
         kcon_log(KCON_LOG_WARN, MODULE_NAME, "Could not get kernel thread with TID %d", tid);
     }
-    thread->active = false;
+    thread->running = false;
+    thread->valid = false;
 }

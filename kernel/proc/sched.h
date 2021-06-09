@@ -34,7 +34,8 @@ struct sched_process {
 };
 
 struct sched_thread {
-    bool active;
+    bool running;
+    bool valid;
     tid_t tid;
     struct interrupt_frame gprs;
     uint64_t cr3;
