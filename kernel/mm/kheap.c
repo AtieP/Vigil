@@ -86,7 +86,6 @@ static void create_slab(size_t size) {
     slab->bitmap = (void *) ((uintptr_t) pmm_calloc(ALIGN_UP(slab->object_count / 8) / MM_PAGE_SIZE) + MM_HIGHER_BASE);
     slab->used_objects = 0;
     slab->mutex.locked = false;
-    slab->mutex.refcount = 0;
 }
 
 void kheap_init() {

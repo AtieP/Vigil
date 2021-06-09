@@ -15,17 +15,26 @@
     along with Vigil.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef __PROC_MUTEX_H__
-#define __PROC_MUTEX_H__
+#ifndef __CPU_LOCALS_H__
+#define __CPU_LOCALS_H__
 
 #include <stdbool.h>
-#include <stddef.h>
+#include <cpu/msr.h>
+#include <proc/sched.h>
 
-struct mutex {
-    volatile bool locked;
+struct cpu_locals {
+    uint8_t lapic_id;
+    pid_t current_pid;
+    tid_t current_tid;
+    bool first_thread_ran;
 };
 
-void mutex_lock(struct mutex *mutex);
-void mutex_unlock(struct mutex *mutex);
+static inline struct cpu_locals *locals_cpu_get() {
+    return (struct cpu_locals *) rdmsr(0xc0000101);
+}
+
+static inline void locals_cpu_set(struct cpu_locals *local) {
+    wrmsr(0xc0000101, (uint64_t) local);
+}
 
 #endif
