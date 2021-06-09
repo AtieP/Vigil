@@ -21,6 +21,7 @@
 #include <cpu/apic/apic.h>
 #include <cpu/gdt.h>
 #include <cpu/idt.h>
+#include <cpu/locals.h>
 #include <cpu/pio.h>
 #include <misc/kcon.h>
 #include <mm/mm.h>
@@ -31,17 +32,18 @@
 #define MODULE_NAME "sched"
 
 static struct vector processes;
-static pid_t current_pid = 0;
-static tid_t current_tid = 0;
 
 static void sched_next(struct interrupt_frame *gprs, uint8_t vector, uint64_t error_code) {
     (void) vector;
     (void) error_code;
+    struct cpu_locals *cpu_locals = locals_cpu_get();
+    pid_t current_pid = cpu_locals->current_pid;
+    tid_t current_tid = cpu_locals->current_tid;
     struct sched_process *current_process = vector_get(&processes, current_pid);
     struct sched_thread *current_thread = vector_get(&current_process->threads, current_tid);
     struct sched_thread *next_thread;
-    if (gprs) {
-        // save general purpose register state
+    if (cpu_locals->first_thread_ran) {
+        current_thread->running = false;
         memcpy(&current_thread->gprs, gprs, sizeof(struct interrupt_frame));
     }
     // get next thread to execute
@@ -64,7 +66,10 @@ get_next_thread:
     if (next_thread->running) {
         goto get_next_thread;
     }
-    lapic_eoi();
+    next_thread->running = true;
+    cpu_locals->current_pid = current_pid;
+    cpu_locals->current_tid = current_tid;
+    cpu_locals->first_thread_ran = true;
     asm volatile(
         "mov %0, %%rsp\n\t"
         "pop %%r15\n\t"
@@ -90,14 +95,22 @@ get_next_thread:
     __builtin_unreachable();
 }
 
+static void sched_irq(struct interrupt_frame *gprs, uint8_t vector, uint64_t error_code) {
+    lapic_eoi();
+    sched_next(gprs, vector, error_code);
+    __builtin_unreachable();
+}
+
 __attribute__((__noreturn__)) void sched_init(uintptr_t address) {
     struct sched_process kernel = {0};
     vector_create(&kernel.threads, sizeof(struct sched_thread));
     vector_create(&processes, sizeof(struct sched_process));
     vector_push(&processes, &kernel);
     sched_new_kernel_thread(address);
-    ioapic_redirect_irq(lapic_get_id(), 0, idt_allocate_interrupt((idt_handler_t) sched_next), 0);
-    sched_next(NULL, 0, 0);
+    ioapic_redirect_irq(lapic_get_id(), 0, idt_allocate_interrupt((idt_handler_t) sched_irq), 0);
+    for (;;) {
+        asm volatile("sti");
+    }
     __builtin_unreachable();
 }
 
