@@ -17,6 +17,7 @@
 
 #include <dev/storage/mem.h>
 #include <fs/devfs.h>
+#include <fs/fd.h>
 #include <fs/vfs.h>
 #include <mm/mm.h>
 
@@ -26,14 +27,14 @@ static int mem_open(struct vfs_opened_file *file, int mode) {
     (void) mode;
     file->file_size = memory.total;
     file->seek = 0;
-    return 0; // fds not implemented yet
+    return fd_create(file->pid, file);
 }
 
 static ssize_t mem_read(struct vfs_opened_file *file, void *buf, size_t count) {
     uint8_t *buf_uint8 = (uint8_t *) buf;
     size_t i;
     for (i = 0; i < count; i++) {
-        if (file->seek > memory.total) {
+        if (file->seek > file->file_size) {
             break;
         }
         buf_uint8[i] = *((uint8_t *) (file->seek++ + MM_HIGHER_BASE));
@@ -44,7 +45,7 @@ static ssize_t mem_read(struct vfs_opened_file *file, void *buf, size_t count) {
 static ssize_t mem_write(struct vfs_opened_file *file, const void *buf, size_t count) {
     size_t i;
     for (i = 0; i < count; i++) {
-        if (file->seek > memory.total) {
+        if (file->seek > file->file_size) {
             break;
         }
         *((uint8_t *) (file->seek++ + MM_HIGHER_BASE)) = ((uint8_t *) buf)[i];
@@ -52,9 +53,8 @@ static ssize_t mem_write(struct vfs_opened_file *file, const void *buf, size_t c
     return i;
 }
 
-static int mem_close(struct vfs_opened_file *file) {
-    (void) file;
-    return 0;
+static int mem_close(struct vfs_opened_file *file, int fd) {
+    return fd_destroy(file->pid, fd);
 }
 
 struct devfs_dev mem_dev = {

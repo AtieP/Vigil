@@ -45,7 +45,6 @@ void kthread1() {
 	kcon_log(KCON_LOG_INFO, "kernel", "Everything initialized successfully, waiting for IRQs");
 	sched_new_kernel_thread((uintptr_t) kthread2);
 	kcon_puts("Hello from kernel thread 1!\n");
-
 	for (;;) {}
 }
 

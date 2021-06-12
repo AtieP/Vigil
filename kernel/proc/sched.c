@@ -23,10 +23,12 @@
 #include <cpu/idt.h>
 #include <cpu/locals.h>
 #include <cpu/pio.h>
+#include <fs/vfs.h>
 #include <misc/kcon.h>
 #include <mm/mm.h>
 #include <proc/sched.h>
 #include <tools/builtins.h>
+#include <tools/nummap.h>
 #include <tools/vector.h>
 
 #define MODULE_NAME "sched"
@@ -104,6 +106,7 @@ static void sched_irq(struct interrupt_frame *gprs, uint8_t vector, uint64_t err
 __attribute__((__noreturn__)) void sched_init(uintptr_t address) {
     struct sched_process kernel = {0};
     vector_create(&kernel.threads, sizeof(struct sched_thread));
+    nummap_create(&kernel.fds);
     vector_create(&processes, sizeof(struct sched_process));
     vector_push(&processes, &kernel);
     sched_new_kernel_thread(address);
@@ -137,4 +140,8 @@ void sched_kill_kernel_thread(tid_t tid) {
     }
     thread->running = false;
     thread->valid = false;
+}
+
+struct sched_process *sched_get_process(pid_t pid) {
+    return vector_get(&processes, pid);
 }

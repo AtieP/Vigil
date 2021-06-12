@@ -15,21 +15,14 @@
     along with Vigil.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef __FS_DEVFS_H__
-#define __FS_DEVFS_H__
+#ifndef __FS_FD_H__
+#define __FS_FD_H__
 
 #include <fs/vfs.h>
+#include <proc/sched.h>
 
-struct devfs_dev {
-    char name[VFS_FILE_LEN];
-    int (*open)(struct vfs_opened_file *file, int mode);
-    ssize_t (*read)(struct vfs_opened_file *file, void *buf, size_t count);
-    ssize_t (*write)(struct vfs_opened_file *file, const void *buf, size_t count);
-    int (*close)(struct vfs_opened_file *file, int fd);
-};
-
-void devfs_init();
-void devfs_register(struct devfs_dev *device);
-void devfs_unregister(struct devfs_dev *device);
+int fd_create(pid_t pid, struct vfs_opened_file *file);
+int fd_dup(pid_t pid, int oldfd);
+int fd_destroy(pid_t pid, int fd);
 
 #endif

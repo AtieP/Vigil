@@ -19,10 +19,15 @@
 #include <fs/vfs.h>
 #include <mm/mm.h>
 
+// Note: the devices take care of the file descriptors.
+
 static struct vfs_node *dev_node;
 
 static int devfs_open(struct vfs_opened_file *file, const char *path, int mode) {
     struct vfs_node *node = vfs_node_get(dev_node, path);
+    if (!node) {
+        return -1;
+    }
     file->node = node;
     return ((struct devfs_dev *) node->fs_specific_data)->open(file, mode);
 }
@@ -35,8 +40,8 @@ static ssize_t devfs_write(struct vfs_opened_file *file, const void *buf, size_t
     return ((struct devfs_dev *) file->node->fs_specific_data)->write(file, buf, count);
 }
 
-static int devfs_close(struct vfs_opened_file *file) {
-    return ((struct devfs_dev *) file->node->fs_specific_data)->close(file);   
+static int devfs_close(struct vfs_opened_file *file, int fd) {
+    return ((struct devfs_dev *) file->node->fs_specific_data)->close(file, fd);   
 }
 
 static struct vfs_fs devfs_fs = {

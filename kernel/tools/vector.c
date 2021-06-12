@@ -30,7 +30,12 @@ void vector_create(struct vector *vector, size_t item_size) {
 
 void *vector_get(struct vector *vector, size_t index) {
     mutex_lock(&vector->mutex);
-    void *data = vector->data + (index * vector->item_size);
+    void *data;
+    if (index > vector->items) {
+        data = NULL;
+    } else {
+        data = vector->data + (index * vector->item_size);
+    }
     mutex_unlock(&vector->mutex);
     return data;
 }
@@ -48,7 +53,9 @@ void vector_push(struct vector *vector, void *data) {
 void vector_remove(struct vector *vector, size_t index) {
     // just memcpy back
     mutex_lock(&vector->mutex);
-    memcpy(vector->data + (index * vector->item_size), vector->data + ((index + 1) * vector->item_size), vector->item_size * vector->items - (index * vector->item_size));
+    if (index < vector->items) {
+        memcpy(vector->data + (index * vector->item_size), vector->data + ((index + 1) * vector->item_size), vector->item_size * vector->items - (index * vector->item_size));
+    }
     mutex_unlock(&vector->mutex);
 }
 

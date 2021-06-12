@@ -15,37 +15,29 @@
     along with Vigil.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef __PROC_SCHED_H__
-#define __PROC_SCHED_H__
+#ifndef __TOOLS_NUMMAP_H__
+#define __TOOLS_NUMMAP_H__
 
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdint.h>
-#include <cpu/idt.h>
 #include <proc/mutex.h>
-#include <tools/nummap.h>
-#include <tools/vector.h>
 
-typedef size_t pid_t;
-typedef size_t tid_t;
-
-struct sched_process {
-    pid_t pid;
-    struct vector threads;
-    struct nummap fds;
+struct nummap_entry {
+    size_t number;
+    void *data;
+    struct nummap_entry *next;
 };
 
-struct sched_thread {
-    bool running;
-    bool valid;
-    tid_t tid;
-    struct interrupt_frame gprs;
-    uint64_t cr3;
+struct nummap {
+    struct nummap_entry *first;
+    struct mutex mutex;
 };
 
-__attribute__((__noreturn__)) void sched_init(uintptr_t address);
-tid_t sched_new_kernel_thread(uintptr_t address);
-void sched_kill_kernel_thread(tid_t tid);
-struct sched_process *sched_get_process(pid_t pid);
+void nummap_create(struct nummap *nummap);
+void nummap_insert(struct nummap *nummap, size_t number, void *data);
+bool nummap_remove(struct nummap *nummap, size_t number);
+void *nummap_get(struct nummap *nummap, size_t number);
+void nummap_delete(struct nummap *nummap);
+size_t nummap_add(struct nummap *nummap, void *data);
 
 #endif

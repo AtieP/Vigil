@@ -16,10 +16,12 @@
 */
 
 #include <stddef.h>
+#include <fs/fd.h>
 #include <fs/vfs.h>
 #include <misc/kcon.h>
 #include <mm/mm.h>
 #include <proc/mutex.h>
+#include <proc/sched.h>
 #include <tools/builtins.h>
 #include <tools/vector.h>
 
@@ -119,4 +121,56 @@ struct vfs_node *vfs_node_mount(struct vfs_fs *fs, struct vfs_node *parent, cons
     struct vfs_node *node = vfs_node_append_child(parent, name);
     node->fs = fs;
     return node;
+}
+
+int vfs_open(pid_t pid, const char *fs_path, const char *path, int mode) {
+    struct vfs_node *parent = vfs_node_get(NULL, fs_path);
+    if (!parent) {
+        return -1;
+    }
+    struct vfs_node *child = vfs_node_get(parent, path);
+    if (!child) {
+        return -1;
+    }
+    struct vfs_opened_file *file = kheap_calloc(sizeof(struct vfs_opened_file));
+    file->pid = pid;
+    file->node = child;
+    // FD allocation is done in the FS driver.
+    return file->node->fs->open(file, path, mode);
+}
+
+ssize_t vfs_read(pid_t pid, int fd, void *buf, size_t count) {
+    struct sched_process *process = sched_get_process(pid);
+    if (!process) {
+        return -1;
+    }
+    struct vfs_opened_file *file = nummap_get(&process->fds, fd);
+    if (!file) {
+        return -1;
+    }
+    return file->node->fs->read(file, buf, count);
+}
+
+ssize_t vfs_write(pid_t pid, int fd, const void *buf, size_t count) {
+    struct sched_process *process = sched_get_process(pid);
+    if (!process) {
+        return -1;
+    }
+    struct vfs_opened_file *file = nummap_get(&process->fds, fd);
+    if (!file) {
+        return -1;
+    }
+    return file->node->fs->write(file, buf, count);
+}
+
+int vfs_close(pid_t pid, int fd) {
+    struct sched_process *process = sched_get_process(pid);
+    if (!process) {
+        return -1;
+    }
+    struct vfs_opened_file *file = nummap_get(&process->fds, fd);
+    if (!file) {
+        return -1;
+    }
+    return file->node->fs->close(file, fd);
 }
