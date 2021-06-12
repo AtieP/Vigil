@@ -40,10 +40,12 @@ void kthread2() {
 	kcon_puts("Hello from kernel thread 2!\n");
 	for (;;) {}
 }
+
 void kthread1() {
 	kcon_log(KCON_LOG_INFO, "kernel", "Everything initialized successfully, waiting for IRQs");
 	sched_new_kernel_thread((uintptr_t) kthread2);
 	kcon_puts("Hello from kernel thread 1!\n");
+
 	for (;;) {}
 }
 
@@ -73,6 +75,8 @@ void kmain(struct stivale2_struct *bootloader_info) {
 	pcie_enumerate();
 	vfs_init();
 	kheap_walkthrough();
+	devfs_init();
+	dev_mem_init();
 	smp_init(smp);
 	sched_init((uintptr_t) kthread1);
 	panic("kernel", "End of kernel");

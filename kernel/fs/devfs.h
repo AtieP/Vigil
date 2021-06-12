@@ -15,44 +15,21 @@
     along with Vigil.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef __FS_VFS_H__
-#define __FS_VFS_H__
+#ifndef __FS_DEVFS_H__
+#define __FS_DEVFS_H__
 
-#include <stdint.h>
-#include <proc/mutex.h>
-#include <tools/vector.h>
+#include <fs/vfs.h>
 
-#define VFS_FILE_LEN 8
-
-typedef signed long ssize_t;
-
-struct vfs_opened_file {
-    int fd;
-    size_t seek;
-    size_t file_size;
-    struct vfs_node *node;
-};
-
-struct vfs_fs {
-    char id[VFS_FILE_LEN];
-    int (*open)(struct vfs_opened_file *file, const char *path, int mode);
+struct devfs_dev {
+    char name[VFS_FILE_LEN];
+    int (*open)(struct vfs_opened_file *file, int mode);
     ssize_t (*read)(struct vfs_opened_file *file, void *buf, size_t count);
     ssize_t (*write)(struct vfs_opened_file *file, const void *buf, size_t count);
     int (*close)(struct vfs_opened_file *file);
 };
 
-struct vfs_node {
-    char name[VFS_FILE_LEN];
-    struct vfs_node *parent;
-    struct vector children;
-    struct vfs_fs *fs;
-    void *fs_specific_data;
-};
-
-void vfs_init();
-struct vfs_node *vfs_node_get(struct vfs_node *parent, const char *path);
-struct vfs_node *vfs_node_append_child(struct vfs_node *parent, const char *name);
-void vfs_node_remove_child(struct vfs_node *parent, const char *name);
-struct vfs_node *vfs_node_mount(struct vfs_fs *fs, struct vfs_node *parent, const char *name);
+void devfs_init();
+void devfs_register(struct devfs_dev *device);
+void devfs_unregister(struct devfs_dev *device);
 
 #endif

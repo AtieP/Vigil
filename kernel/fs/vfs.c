@@ -43,7 +43,6 @@ void vfs_init() {
     kcon_log(KCON_LOG_INFO, MODULE_NAME, "Successfully created root node");
 }
 
-
 struct vfs_node *vfs_node_get(struct vfs_node *parent, const char *path) {
     mutex_lock(&vfs_mutex);
     struct vfs_node *parent_node;
@@ -60,15 +59,12 @@ next:
             return NULL;
         }
         for (size_t i = 0; i < parent_node->children.items; i++) {
-            child_node = vector_get(&parent_node->children, i);
+            child_node = (struct vfs_node *) *((uintptr_t *) vector_get(&parent_node->children, i));
             // item in this context: one of the elements of the path
             size_t item_length = strlen_slash(path);
-            if (strlen(child_node->name) != item_length) {
-                continue;
-            }
             if (!strncmp(child_node->name, path, item_length)) {
                 path += item_length;
-                if (*path == '\0') {
+                if (*(path++) == '\0') {
                     mutex_unlock(&vfs_mutex);
                     return child_node;
                 }
@@ -91,7 +87,7 @@ struct vfs_node *vfs_node_append_child(struct vfs_node *parent, const char *name
     node->parent = parent;
     node->fs = parent->fs;
     vector_create(&node->children, sizeof(struct vfs_node *));
-    vector_push(&parent->children, node);
+    vector_push(&parent->children, &node);
     mutex_unlock(&vfs_mutex);
     return node;
 }
@@ -114,4 +110,13 @@ void vfs_node_remove_child(struct vfs_node *parent, const char *name) {
     }
     mutex_unlock(&vfs_mutex);
     kcon_log(KCON_LOG_WARN, MODULE_NAME, "Could not delete node %s", name);
+}
+
+struct vfs_node *vfs_node_mount(struct vfs_fs *fs, struct vfs_node *parent, const char *name) {
+    if (!parent) {
+        parent = root;
+    }
+    struct vfs_node *node = vfs_node_append_child(parent, name);
+    node->fs = fs;
+    return node;
 }
