@@ -30,6 +30,24 @@ static struct acpi_tables_rsdt *rsdt;
 static struct acpi_tables_xsdt *xsdt;
 static bool use_xsdt;
 
+void acpi_iterate_tables() {
+    size_t entries;
+    if (use_xsdt) {
+        entries = (xsdt->sdt.length - sizeof(struct acpi_tables_xsdt)) / sizeof(uint64_t);
+    } else {
+        entries = (rsdt->sdt.length - sizeof(struct acpi_tables_rsdt)) / sizeof(uint32_t);
+    }
+    for (size_t entry = 0; entry < entries; entry++) {
+        struct acpi_tables_sdt *sdt;
+        if (use_xsdt) {
+            sdt = (struct acpi_tables_sdt *) (xsdt->entries[entry] + MM_HIGHER_BASE);
+        } else {
+            sdt = (struct acpi_tables_sdt *) ((uintptr_t) rsdt->entries[entry] + MM_HIGHER_BASE);
+        }
+        kcon_log(KCON_LOG_INFO, MODULE_NAME, "Found table %S, %d bytes big", sdt->signature, 4, sdt->length);
+    }
+}
+
 void acpi_get_rsdt(uintptr_t rsdp_address) {
     struct acpi_tables_rsdp *rsdp = (struct acpi_tables_rsdp *) (rsdp_address + MM_HIGHER_BASE);
     rsdp_revision = rsdp->revision;
@@ -42,6 +60,7 @@ void acpi_get_rsdt(uintptr_t rsdp_address) {
         rsdt = (struct acpi_tables_rsdt *) ((uintptr_t) rsdp->rsdt_address + MM_HIGHER_BASE);
         kcon_log(KCON_LOG_INFO, MODULE_NAME, "Using RSDT at %p", rsdt);
     }
+    acpi_iterate_tables();
 }
 
 void *acpi_get_table(const char *signature, size_t index) {
