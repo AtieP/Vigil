@@ -72,7 +72,7 @@ void idt_global_handler(struct interrupt_frame *int_frame, uint8_t vector, uint6
 // Sets up the pre handlers in the IDT itself
 static void idt_populate_pre_handlers() {
     for (size_t i = 0; i < 256; i++) {
-        idt_register_handler(i, NULL, 0, 0b10001110);
+        idt_register_handler(i, NULL, 0, 0b10001111);
     }
 }
 
