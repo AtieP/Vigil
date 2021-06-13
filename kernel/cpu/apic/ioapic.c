@@ -29,7 +29,7 @@ static uint32_t get_gsi_count(uintptr_t ioapic_address) {
 }
 
 static struct acpi_tables_madt_isc_ioapic *get_ioapic_by_gsi(uint32_t gsi) {
-    for (size_t i = 0; i < madt_ioapics.items; i++) {
+    for (size_t i = 0; i < vector_get_items(&madt_ioapics); i++) {
         struct acpi_tables_madt_isc_ioapic *ioapic = vector_get(&madt_ioapics, i);
         if (
             ioapic->gsi <= gsi
@@ -61,7 +61,7 @@ void ioapic_redirect_gsi(uint8_t lapic_id, uint32_t gsi, uint8_t vector, uint64_
 
 // Use this for legacy IRQs
 void ioapic_redirect_irq(uint8_t lapic_id, uint8_t irq, uint8_t vector, uint64_t flags) {
-    for (size_t i = 0; i < madt_isos.items; i++) {
+    for (size_t i = 0; i < vector_get_items(&madt_isos); i++) {
         struct acpi_tables_madt_isc_iso *iso = vector_get(&madt_isos, i);
         if (iso->irq_source == irq) {
             ioapic_redirect_gsi(lapic_id, iso->gsi, vector, (uint64_t) iso->flags | flags);

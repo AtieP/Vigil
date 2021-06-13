@@ -28,6 +28,13 @@ void vector_create(struct vector *vector, size_t item_size) {
     vector->mutex.locked = false;
 }
 
+size_t vector_get_items(struct vector *vector) {
+    mutex_lock(&vector->mutex);
+    size_t entries = vector->items;
+    mutex_unlock(&vector->mutex);
+    return entries;
+}
+
 void *vector_get(struct vector *vector, size_t index) {
     mutex_lock(&vector->mutex);
     void *data;

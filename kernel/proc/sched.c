@@ -50,10 +50,10 @@ static void sched_next(struct interrupt_frame *gprs, uint8_t vector, uint64_t er
     }
     // get next thread to execute
 get_next_thread:
-    if (current_tid < current_process->threads.items - 1) {
+    if (current_tid < vector_get_items(&current_process->threads) - 1) {
         current_tid++;
         next_thread = vector_get(&current_process->threads, current_tid);
-    } else if (current_pid < processes.items - 1) {
+    } else if (current_pid < vector_get_items(&processes) - 1) {
         current_pid++;
         current_tid = 0;
         next_thread = vector_get(&((struct sched_process *) vector_get(&processes, current_pid))->threads, current_tid);

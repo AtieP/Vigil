@@ -144,7 +144,7 @@ ssize_t vfs_read(pid_t pid, int fd, void *buf, size_t count) {
     if (!process) {
         return -1;
     }
-    struct vfs_opened_file *file = nummap_get(&process->fds, fd);
+    struct vfs_opened_file *file = nummap_get_by_number(&process->fds, fd);
     if (!file) {
         return -1;
     }
@@ -156,7 +156,7 @@ ssize_t vfs_write(pid_t pid, int fd, const void *buf, size_t count) {
     if (!process) {
         return -1;
     }
-    struct vfs_opened_file *file = nummap_get(&process->fds, fd);
+    struct vfs_opened_file *file = nummap_get_by_number(&process->fds, fd);
     if (!file) {
         return -1;
     }
@@ -168,7 +168,7 @@ int vfs_close(pid_t pid, int fd) {
     if (!process) {
         return -1;
     }
-    struct vfs_opened_file *file = nummap_get(&process->fds, fd);
+    struct vfs_opened_file *file = nummap_get_by_number(&process->fds, fd);
     if (!file) {
         return -1;
     }

@@ -33,7 +33,7 @@ int fd_dup(pid_t pid, int oldfd) {
     if (!process) {
         return -1;
     }
-    struct vfs_opened_file *file = nummap_get(&process->fds, oldfd);
+    struct vfs_opened_file *file = nummap_get_by_number(&process->fds, oldfd);
     if (!file) {
         return -1;
     }
