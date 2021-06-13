@@ -68,6 +68,7 @@ bool nummap_remove(struct nummap *nummap, size_t number) {
             entry2 = entry->next;
             entry->next = entry->next->next;
             kheap_free(entry2);
+            nummap->entries--;
             mutex_unlock(&nummap->mutex);
             return true;
         }
