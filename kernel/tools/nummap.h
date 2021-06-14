@@ -35,12 +35,12 @@ struct nummap {
 };
 
 void nummap_create(struct nummap *nummap);
-void nummap_insert(struct nummap *nummap, size_t number, void *data);
+bool nummap_insert(struct nummap *nummap, size_t number, void *data);
 bool nummap_remove(struct nummap *nummap, size_t number);
 size_t nummap_get_entries(struct nummap *nummap);
 void *nummap_get_by_number(struct nummap *nummap, size_t number);
 void *nummap_get_by_index(struct nummap *nummap, size_t index);
 void nummap_delete(struct nummap *nummap);
-size_t nummap_add(struct nummap *nummap, void *data);
+size_t nummap_add(struct nummap *nummap, void *data, bool *added);
 
 #endif

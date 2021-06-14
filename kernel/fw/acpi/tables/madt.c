@@ -44,19 +44,19 @@ void madt_init() {
                     break;
                 }
                 kcon_log(KCON_LOG_INFO, MODULE_NAME, "Found LAPIC with ID %d", lapic->apic_id);
-                vector_push(&madt_lapics, lapic);
+                assert(vector_push(&madt_lapics, lapic), MODULE_NAME, "Could not add LAPIC record");
                 break;
             }
             case ACPI_TABLES_MADT_ISC_IOAPIC: {
                 struct acpi_tables_madt_isc_ioapic *ioapic = (struct acpi_tables_madt_isc_ioapic *) isc;
                 kcon_log(KCON_LOG_INFO, MODULE_NAME, "Found IO/APIC with ID %d", ioapic->ioapic_id);
-                vector_push(&madt_ioapics, ioapic);
+                assert(vector_push(&madt_ioapics, ioapic), MODULE_NAME, "Could not add IO/APIC record");
                 break;
             }
             case ACPI_TABLES_MADT_ISC_ISO: {
                 struct acpi_tables_madt_isc_iso *iso = (struct acpi_tables_madt_isc_iso *) isc;
                 kcon_log(KCON_LOG_INFO, MODULE_NAME, "Legacy IRQ %d mapped to GSI %d", iso->irq_source, iso->gsi);
-                vector_push(&madt_isos, iso);
+                assert(vector_push(&madt_isos, iso), MODULE_NAME, "Could not add Interrupt Source Override record");
                 break;
             }
             default:

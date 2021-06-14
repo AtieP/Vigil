@@ -47,14 +47,19 @@ void *vector_get(struct vector *vector, size_t index) {
     return data;
 }
 
-void vector_push(struct vector *vector, void *data) {
+bool vector_push(struct vector *vector, void *data) {
     mutex_lock(&vector->mutex);
     size_t vector_size = vector->items * vector->item_size;
     void *ptr = kheap_realloc(vector->data, vector_size + vector->item_size, vector_size);
+    if (!ptr) {
+        mutex_unlock(&vector->mutex);
+        return false;
+    }
     memcpy(ptr + vector_size, data, vector->item_size);
     vector->data = ptr;
     vector->items++;
     mutex_unlock(&vector->mutex);
+    return true;
 }
 
 void vector_remove(struct vector *vector, size_t index) {

@@ -144,7 +144,7 @@ void *pmm_alloc(size_t pages) {
             return (void *) (MM_PAGE_SIZE * i);
         }
     }
-    panic(MODULE_NAME, "Could not allocate %d pages", pages);
+    return NULL;
 }
 
 void *pmm_calloc(size_t pages) {

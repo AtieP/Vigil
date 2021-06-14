@@ -15,6 +15,7 @@
     along with Vigil.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <stdbool.h>
 #include <mm/mm.h>
 #include <proc/mutex.h>
 #include <tools/nummap.h>
@@ -25,25 +26,34 @@ void nummap_create(struct nummap *nummap) {
     nummap->mutex.locked = false;
 }
 
-void nummap_insert(struct nummap *nummap, size_t number, void *data) {
+bool nummap_insert(struct nummap *nummap, size_t number, void *data) {
     mutex_lock(&nummap->mutex);
     struct nummap_entry *entry = nummap->first;
     if (!entry) {
         nummap->first = kheap_calloc(sizeof(struct nummap_entry));
+        if (!nummap->first) {
+            mutex_unlock(&nummap->mutex);
+            return false;
+        }
         nummap->first->number = number;
         nummap->first->data = data;
         nummap->entries++;
         mutex_unlock(&nummap->mutex);
-        return;
+        return true;
     }
     while (entry->next) {
         entry = entry->next;
     }
     entry->next = kheap_calloc(sizeof(struct nummap_entry));
+    if (!entry->next) {
+        mutex_unlock(&nummap->mutex);
+        return false;
+    }
     entry->next->number = number;
     entry->next->data = data;
     nummap->entries++;
     mutex_unlock(&nummap->mutex);
+    return true;
 }
 
 bool nummap_remove(struct nummap *nummap, size_t number) {
@@ -121,15 +131,21 @@ void *nummap_get_by_index(struct nummap *nummap, size_t index) {
     return NULL;
 }
 
-size_t nummap_add(struct nummap *nummap, void *data) {
+size_t nummap_add(struct nummap *nummap, void *data, bool *added) {
     mutex_lock(&nummap->mutex);
     size_t lowest_unused_number = 0;
     struct nummap_entry *entry = nummap->first;
     if (!entry) {
         nummap->first = kheap_calloc(sizeof(struct nummap_entry));
+        if (!nummap->first) {
+            *added = false;
+            mutex_unlock(&nummap->mutex);
+            return 0;
+        }
         nummap->first->number = lowest_unused_number;
         nummap->first->data = data;
         nummap->entries++;
+        *added = true;
         mutex_unlock(&nummap->mutex);
         return lowest_unused_number;
     }
@@ -140,9 +156,15 @@ size_t nummap_add(struct nummap *nummap, void *data) {
         entry = entry->next;
     }
     entry->next = kheap_calloc(sizeof(struct nummap_entry));
+    if (!entry->next) {
+        *added = false;
+        mutex_unlock(&nummap->mutex);
+        return 0;
+    }
     entry->next->number = lowest_unused_number;
     entry->next->data = data;
     nummap->entries++;
+    *added = true;
     mutex_unlock(&nummap->mutex);
     return lowest_unused_number;
 }

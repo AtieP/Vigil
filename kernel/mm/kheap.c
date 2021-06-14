@@ -65,13 +65,12 @@ void kheap_walkthrough() {
     }
 }
 
-static void create_slab(size_t size) {
+static bool create_slab(size_t size) {
     assert(size != 0, MODULE_NAME, "Cannot allocate slab with 0-sized objects");
     struct slab *slab;
     if (!slabs) {
         slabs = (void *) ((uintptr_t) pmm_calloc(ALIGN_UP(sizeof(struct slab)) / MM_PAGE_SIZE) + MM_HIGHER_BASE);
         slab = slabs;
-        slab->next = NULL;
     } else {
         slab = slabs;
         while (slab->next) {
@@ -80,12 +79,15 @@ static void create_slab(size_t size) {
         slab->next = (void *) ((uintptr_t) pmm_calloc(ALIGN_UP(sizeof(struct slab)) / MM_PAGE_SIZE) + MM_HIGHER_BASE);
         slab = slab->next;
     }
+    assert(slab != NULL, MODULE_NAME, "Could not create slab");
     slab->object_count = OBJECT_COUNT;
     slab->object_size = size;
     slab->base = (void *) ((uintptr_t) pmm_alloc(ALIGN_UP(slab->object_count * slab->object_size) / MM_PAGE_SIZE) + MM_HIGHER_BASE);
     slab->bitmap = (void *) ((uintptr_t) pmm_calloc(ALIGN_UP(slab->object_count / 8) / MM_PAGE_SIZE) + MM_HIGHER_BASE);
     slab->used_objects = 0;
     slab->mutex.locked = false;
+    assert(slab->base != NULL || slab->bitmap != NULL, MODULE_NAME, "Could not allocate base or bitmap for slab");
+    return true;
 }
 
 void kheap_init() {
@@ -107,7 +109,9 @@ void *kheap_alloc(size_t size) {
     }
 allocate:
     if (!slabs) {
-        create_slab(size);
+        if (!create_slab(size)) {
+            return NULL;
+        }
     }
     struct slab *slab = slabs;
     mutex_lock(&slab->mutex);
@@ -125,9 +129,10 @@ allocate:
         mutex_unlock(&slab->mutex);
         slab = slab->next;
     }
-    create_slab(size);
-    goto allocate;
-    __builtin_unreachable();
+    if (create_slab(size)) {
+        goto allocate;
+    }
+    return NULL;
 }
 
 void *kheap_calloc(size_t size) {
