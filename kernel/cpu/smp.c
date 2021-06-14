@@ -37,9 +37,6 @@ static void core_init(struct stivale2_smp_info *smp_info) {
     lapic_enable();
     struct cpu_locals *ap_locals = kheap_alloc(sizeof(struct cpu_locals));
     ap_locals->lapic_id = smp_info->lapic_id;
-    ap_locals->current_pid = 0;
-    ap_locals->current_tid = 0;
-    ap_locals->first_thread_ran = false;
     locals_cpu_set(ap_locals);
     kcon_log(KCON_LOG_INFO, MODULE_NAME, "Core with LAPIC ID %d brought up successfully", smp_info->lapic_id);
     asm volatile(
@@ -62,8 +59,5 @@ void smp_init(struct stivale2_struct_tag_smp *smp_info) {
     }
     struct cpu_locals *bsp_locals = kheap_alloc(sizeof(struct cpu_locals));
     bsp_locals->lapic_id = bsp_lapic_id;
-    bsp_locals->current_pid = 0;
-    bsp_locals->current_tid = 0;
-    bsp_locals->first_thread_ran = false;
     locals_cpu_set(bsp_locals);
 }
