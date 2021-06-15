@@ -20,9 +20,11 @@
 
 #include <stdbool.h>
 #include <cpu/msr.h>
+#include <proc/sched.h>
 
 struct cpu_locals {
     uint8_t lapic_id;
+    struct sched_thread *current_thread;
 };
 
 static inline struct cpu_locals *locals_cpu_get() {

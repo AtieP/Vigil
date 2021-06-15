@@ -25,6 +25,7 @@
 #include <cpu/smp.h>
 #include <misc/kcon.h>
 #include <mm/mm.h>
+#include <proc/sched.h>
 #include <tools/assert.h>
 
 #define MODULE_NAME "smp"
@@ -39,6 +40,7 @@ static void core_init(struct stivale2_smp_info *smp_info) {
     struct cpu_locals *ap_locals = kheap_alloc(sizeof(struct cpu_locals));
     assert(ap_locals != NULL, MODULE_NAME, "Could not create CPU locals for AP");
     ap_locals->lapic_id = smp_info->lapic_id;
+    ap_locals->current_thread = NULL;
     locals_cpu_set(ap_locals);
     kcon_log(KCON_LOG_INFO, MODULE_NAME, "Core with LAPIC ID %d brought up successfully", smp_info->lapic_id);
     asm volatile(
@@ -56,11 +58,14 @@ void smp_init(struct stivale2_struct_tag_smp *smp_info) {
         if (smp_info->smp_info[i].lapic_id == bsp_lapic_id) {
             continue;
         }
-        smp_info->smp_info[i].target_stack = (uint64_t) pmm_alloc(32) + (MM_PAGE_SIZE * 32) + MM_HIGHER_BASE;
+        smp_info->smp_info[i].target_stack = (uint64_t) pmm_alloc(SCHED_STACK_SIZE / MM_PAGE_SIZE);
+        assert(smp_info->smp_info[i].target_stack != 0, MODULE_NAME, "Could not allocate stack for AP");
+        smp_info->smp_info[i].target_stack += MM_HIGHER_BASE + SCHED_STACK_SIZE;
         smp_info->smp_info[i].goto_address = (uint64_t) core_init;
     }
     struct cpu_locals *bsp_locals = kheap_alloc(sizeof(struct cpu_locals));
-    bsp_locals->lapic_id = bsp_lapic_id;
     assert(bsp_locals != NULL, MODULE_NAME, "Could not create CPU locals for BSP");
+    bsp_locals->lapic_id = bsp_lapic_id;
+    bsp_locals->current_thread = NULL;
     locals_cpu_set(bsp_locals);
 }

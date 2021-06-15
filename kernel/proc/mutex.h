@@ -27,5 +27,6 @@ struct mutex {
 
 void mutex_lock(struct mutex *mutex);
 void mutex_unlock(struct mutex *mutex);
+bool mutex_locked(struct mutex *mutex);
 
 #endif

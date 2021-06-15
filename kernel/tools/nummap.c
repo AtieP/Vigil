@@ -17,8 +17,40 @@
 
 #include <stdbool.h>
 #include <mm/mm.h>
+#include <misc/kcon.h>
 #include <proc/mutex.h>
 #include <tools/nummap.h>
+
+static void swap_nummap_entries(struct nummap_entry *entry1, struct nummap_entry *entry2) {
+    kcon_log(KCON_LOG_NONE, "d", "%d %d", entry1->number, entry2->number);
+    size_t tempnumber = entry1->number;
+    struct nummap_entry *tempnext = entry1->next;
+    entry1->number = entry2->number;
+    entry1->data = entry2->data;
+    entry2->number = tempnumber;
+    entry2->data = tempnext;kcon_log(KCON_LOG_NONE, "d", "%d %d", entry1->number, entry2->number);
+}
+
+static void sort_nummap(struct nummap *nummap) {
+    if (!nummap->first) {
+        return;
+    }
+    bool swapped;
+    struct nummap_entry *ptr1;
+    struct nummap_entry *ptr2 = NULL;
+    do {
+        swapped = false;
+        ptr1 = nummap->first;
+        while (ptr1->next != ptr2) {
+            if (ptr1->number > ptr1->next->number) {
+                swap_nummap_entries(ptr1, ptr1->next);
+                swapped = true;
+            }
+            ptr1 = ptr1->next;
+        }
+        ptr2 = ptr1;
+    } while (swapped);
+}
 
 void nummap_create(struct nummap *nummap) {
     nummap->entries = 0;
@@ -62,27 +94,31 @@ bool nummap_remove(struct nummap *nummap, size_t number) {
         mutex_unlock(&nummap->mutex);
         return false;
     }
-    struct nummap_entry *entry;
+    struct nummap_entry *entry1 = nummap->first;
     struct nummap_entry *entry2;
     if (nummap->first->number == number) {
-        entry = nummap->first;
+        entry2 = nummap->first;
         nummap->first = nummap->first->next;
-        kheap_free(entry);
-        nummap->entries--;
+        kheap_free(entry2);
         mutex_unlock(&nummap->mutex);
         return true;
-    } 
-    entry = nummap->first;
-    while (entry->next) {
-        if (entry->next->number == number) {
-            entry2 = entry->next;
-            entry->next = entry->next->next;
+    }
+    if (entry1->next->number == number) {
+        entry2 = entry1->next;
+        entry1->next = entry1->next->next;
+        kheap_free(entry2);
+        mutex_unlock(&nummap->mutex);
+        return true;
+    }
+    while (entry1->next) {
+        if (entry1->next->number == number) {
+            entry2 = entry1->next;
+            entry1->next = entry1->next->next;
             kheap_free(entry2);
-            nummap->entries--;
             mutex_unlock(&nummap->mutex);
             return true;
         }
-        entry = entry->next;
+        entry1 = entry1->next;
     }
     mutex_unlock(&nummap->mutex);
     return false;
@@ -133,7 +169,7 @@ void *nummap_get_by_index(struct nummap *nummap, size_t index) {
 
 size_t nummap_add(struct nummap *nummap, void *data, bool *added) {
     mutex_lock(&nummap->mutex);
-    size_t lowest_unused_number = 0;
+    size_t lowest_unused_number = ~1;
     struct nummap_entry *entry = nummap->first;
     if (!entry) {
         nummap->first = kheap_calloc(sizeof(struct nummap_entry));
@@ -142,28 +178,39 @@ size_t nummap_add(struct nummap *nummap, void *data, bool *added) {
             mutex_unlock(&nummap->mutex);
             return 0;
         }
-        nummap->first->number = lowest_unused_number;
-        nummap->first->data = data;
-        nummap->entries++;
+        lowest_unused_number = 0;
+        entry = nummap->first; // update
+        entry->number = lowest_unused_number;
+        entry->data = data;
         *added = true;
         mutex_unlock(&nummap->mutex);
         return lowest_unused_number;
     }
-    while (entry->next) {
-        if (lowest_unused_number >= entry->number) {
+    sort_nummap(nummap);
+    // get number
+    if (!entry->next) {
+        if (entry->number == 0) {
             lowest_unused_number = entry->number + 1;
+        } else {
+            lowest_unused_number = entry->number - 1;
         }
-        entry = entry->next;
+    } else {
+        while (entry->next) {
+            if (entry->number < lowest_unused_number) {
+                lowest_unused_number = entry->number + 2;
+            }
+            entry = entry->next;
+        }
     }
+    // create
     entry->next = kheap_calloc(sizeof(struct nummap_entry));
     if (!entry->next) {
         *added = false;
         mutex_unlock(&nummap->mutex);
-        return 0;
+        return lowest_unused_number;
     }
     entry->next->number = lowest_unused_number;
     entry->next->data = data;
-    nummap->entries++;
     *added = true;
     mutex_unlock(&nummap->mutex);
     return lowest_unused_number;

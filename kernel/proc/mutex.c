@@ -28,3 +28,7 @@ void mutex_lock(struct mutex *mutex) {
 void mutex_unlock(struct mutex *mutex) {
     __sync_bool_compare_and_swap(&mutex->locked, true, false);
 }
+
+bool mutex_locked(struct mutex *mutex) {
+    return __sync_bool_compare_and_swap(&mutex->locked, true, true);
+}
